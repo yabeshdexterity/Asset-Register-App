@@ -1,0 +1,4853 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asset Register</title>
+
+<!-- ============================================================
+     CONTENT SECURITY POLICY - FIXES ELECTRON WARNING
+     ============================================================ -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  font-src 'self' https://fonts.gstatic.com;
+  img-src 'self' data:;
+  connect-src 'self' https://firestore.googleapis.com https://*.firebaseio.com;
+">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<style>
+  :root{
+    --bg:#0e1520;
+    --panel:#161f2d;
+    --panel-alt:#1c2637;
+    --line:#2a3648;
+    --text:#e7edf5;
+    --muted:#8695a7;
+    --amber:#e3a542;
+    --amber-dim:#5c4726;
+    --teal:#4fd1c5;
+    --teal-dim:#1c3a37;
+    --vacant:#3d4a5f;
+    --danger:#e0685f;
+    --danger-dim:#5c2a28;
+    --success:#4caf50;
+    --purple:#9b59b6;
+    --purple-dim:#3d2a4a;
+    --rental-color:#f39c12;
+    --rental-dim:#5c4010;
+    --swap-color:#e67e22;
+    --swap-dim:#5c2e10;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden;}
+  ::selection{background:var(--teal-dim);color:var(--teal);}
+
+  .app-wrapper {
+    display: flex;
+    min-height: 100vh;
+    position: relative;
+  }
+
+  .extra-assets-toggle {
+    position: fixed;
+    left: 0;
+    top: 30%;
+    transform: translateY(-50%);
+    z-index: 140;
+    background: var(--purple);
+    color: #fff;
+    border: none;
+    border-radius: 0 8px 8px 0;
+    padding: 16px 10px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transition: all .3s;
+    box-shadow: 4px 0 20px rgba(155, 89, 182, 0.3);
+  }
+  .extra-assets-toggle:hover {
+    background: #8e44ad;
+    padding-left: 14px;
+  }
+  .extra-assets-toggle svg {
+    width: 20px;
+    height: 20px;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  /* ============================================================
+     UPDATED: MADE BY CREDIT - FIXED BOTTOM BOX
+     ============================================================ */
+  .made-by {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 32px;
+    background: rgba(14, 21, 32, 0.95);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    z-index: 9999;
+    pointer-events: auto;
+    user-select: none;
+  }
+
+  .made-by span {
+    color: var(--teal);
+    font-weight: 600;
+    margin-left: 4px;
+  }
+
+  .rental-toggle {
+    position: fixed;
+    left: 0;
+    top: 45%;
+    transform: translateY(-50%);
+    z-index: 140;
+    background: var(--rental-color);
+    color: #fff;
+    border: none;
+    border-radius: 0 8px 8px 0;
+    padding: 16px 10px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transition: all .3s;
+    box-shadow: 4px 0 20px rgba(243, 156, 18, 0.3);
+  }
+  .rental-toggle:hover {
+    background: #e67e22;
+    padding-left: 14px;
+  }
+  .rental-toggle svg {
+    width: 20px;
+    height: 20px;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .swap-toggle {
+    position: fixed;
+    left: 0;
+    top: 60%;
+    transform: translateY(-50%);
+    z-index: 140;
+    background: var(--swap-color);
+    color: #fff;
+    border: none;
+    border-radius: 0 8px 8px 0;
+    padding: 16px 10px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transition: all .3s;
+    box-shadow: 4px 0 20px rgba(230, 126, 34, 0.3);
+  }
+  .swap-toggle:hover {
+    background: #d35400;
+    padding-left: 14px;
+  }
+  .swap-toggle svg {
+    width: 20px;
+    height: 20px;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .main-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    /* UPDATED: Add padding so footer doesn't cover bottom content */
+    padding-bottom: 50px; 
+  }
+  .main-content.hidden {
+    display: none;
+  }
+
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:rgba(14,21,32,0.92);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+    padding:18px 28px;
+    display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+  }
+  .brand{display:flex;flex-direction:column;gap:2px;margin-right:auto;}
+  .brand .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;color:var(--amber);text-transform:uppercase;}
+  .brand h1{font-family:'Space Grotesk',sans-serif;font-size:20px;margin:0;font-weight:700;letter-spacing:-0.01em;}
+
+  .search-wrap{position:relative;}
+  .search-wrap input{
+    background:var(--panel-alt);border:1px solid var(--line);color:var(--text);
+    padding:10px 14px 10px 34px;border-radius:8px;font-family:'Inter';font-size:14px;
+    width:260px;outline:none;transition:border-color .15s;
+  }
+  .search-wrap input:focus{border-color:var(--teal);}
+  .search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--muted);}
+
+  .btn{
+    font-family:'JetBrains Mono',monospace;font-size:12.5px;letter-spacing:0.03em;
+    padding:10px 16px;border-radius:8px;border:1px solid var(--line);
+    background:var(--panel-alt);color:var(--text);cursor:pointer;
+    display:inline-flex;align-items:center;gap:8px;transition:all .15s;
+    text-transform:uppercase;font-weight:500;
+  }
+  .btn:hover{border-color:var(--teal);color:var(--teal);}
+  .btn.primary{background:var(--amber);border-color:var(--amber);color:#1a1305;font-weight:600;}
+  .btn.primary:hover{background:#f0b158;color:#1a1305;}
+  .btn.ghost{background:transparent;}
+  .btn.danger{background:var(--danger-dim);border-color:var(--danger);color:var(--danger);font-weight:600;}
+  .btn.danger:hover{background:var(--danger);border-color:var(--danger);color:#fff;}
+  .btn.success{background:var(--success);border-color:var(--success);color:#fff;font-weight:600;}
+  .btn.success:hover{background:#45a049;color:#fff;}
+  .btn.swap-btn{background:var(--swap-dim);border-color:var(--swap-color);color:var(--swap-color);font-weight:600;}
+  .btn.swap-btn:hover{background:var(--swap-color);border-color:var(--swap-color);color:#fff;}
+  .btn svg{width:14px;height:14px;}
+
+  .stats{display:flex;gap:10px;padding:0 28px;margin-top:16px;flex-wrap:wrap;}
+  .stat{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:12px 18px;min-width:110px;
+  }
+  .stat .num{font-family:'Space Grotesk';font-size:24px;font-weight:700;}
+  .stat .lbl{font-family:'JetBrains Mono';font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-top:2px;}
+  .stat.occupied .num{color:var(--amber);}
+  .stat.vacant .num{color:var(--muted);}
+  .stat.purple .num{color:var(--purple);}
+  .stat.rental .num{color:var(--rental-color);}
+
+  .dashboard-layout {
+    display: flex;
+    gap: 20px;
+    padding: 16px 28px 60px;
+    align-items: flex-start;
+    flex: 1;
+  }
+
+  .left-panel {
+    width: 240px;
+    flex-shrink: 0;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 12px;
+    position: sticky;
+    top: 90px;
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+  }
+
+  .left-panel::-webkit-scrollbar {
+    width: 3px;
+  }
+  .left-panel::-webkit-scrollbar-track {
+    background: var(--bg);
+    border-radius: 3px;
+  }
+  .left-panel::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 3px;
+  }
+
+  .panel-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--line);
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .panel-title .count-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    background: var(--amber-dim);
+    color: var(--amber);
+    padding: 1px 8px;
+    border-radius: 12px;
+  }
+
+  .seat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .seat-list-item {
+    background: var(--panel-alt);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: all .2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .seat-list-item:hover {
+    border-color: var(--teal);
+    background: var(--panel);
+    transform: translateX(4px);
+  }
+  .seat-list-item .seat-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    min-width: 28px;
+  }
+  .seat-list-item.occupied .seat-id {
+    color: var(--amber);
+  }
+  .seat-list-item .seat-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .seat-list-item .seat-info .name {
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .seat-list-item .seat-info .desktop {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .seat-list-item .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .seat-list-item .status-dot.occupied {
+    background: var(--amber);
+  }
+  .seat-list-item .status-dot.vacant {
+    background: var(--muted);
+  }
+  .seat-list-item .status-dot.highlight-dot {
+    box-shadow: 0 0 12px var(--amber);
+    animation: pulse 1s ease-in-out 3;
+  }
+  .seat-list-item .seat-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.5); }
+  }
+
+  .seat-list-item.highlight-item {
+    border-color: var(--amber) !important;
+    box-shadow: 0 0 20px rgba(227, 165, 66, 0.2);
+    background: var(--amber-dim);
+  }
+
+  .right-panel {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .right-panel .system-details-section {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+  }
+
+  .right-panel .system-details-section .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--line);
+    margin-bottom: 14px;
+  }
+
+  .right-panel .system-details-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  .right-panel .detail-item {
+    background: var(--panel-alt);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+
+  .right-panel .detail-item .detail-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .right-panel .detail-item .detail-icon {
+    font-size: 14px;
+  }
+  .right-panel .detail-item .detail-label {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .right-panel .detail-item .detail-count {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--amber);
+  }
+  .right-panel .detail-item .detail-breakdown {
+    display: flex;
+    gap: 12px;
+    padding-left: 22px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+  }
+  .right-panel .detail-item .detail-breakdown .office {
+    color: var(--amber);
+  }
+  .right-panel .detail-item .detail-breakdown .rental {
+    color: var(--teal);
+  }
+  .right-panel .detail-item .detail-breakdown span {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .right-panel .extra-assets-section {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+  }
+
+  .right-panel .extra-assets-section .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--line);
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .right-panel .extra-assets-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .right-panel .extra-asset-item {
+    background: var(--panel-alt);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .right-panel .extra-asset-item .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .right-panel .extra-asset-item .count {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--purple);
+  }
+
+  .right-panel .seat-details-section {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 20px;
+    min-height: 200px;
+  }
+
+  .right-panel .seat-details-section .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  .detail {
+    display: none;
+  }
+  .detail.active {
+    display: block;
+  }
+
+  .row-groups {
+    display: none;
+  }
+  .row-groups.hidden {
+    display: none;
+  }
+
+  .back-link{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    color:var(--muted);
+    text-decoration:none;
+    font-family:'JetBrains Mono';
+    font-size:12.5px;
+    cursor:pointer;
+    margin-bottom:18px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+  }
+  .back-link:hover{color:var(--teal);}
+  .back-link svg{width:14px;height:14px;}
+
+  .detail-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;gap:16px;flex-wrap:wrap;}
+  .detail-head .tag{font-family:'JetBrains Mono';font-size:12px;color:var(--amber);letter-spacing:0.15em;text-transform:uppercase;}
+  .detail-head h2{font-family:'Space Grotesk';font-size:28px;margin:4px 0 0;font-weight:700;}
+  .detail-actions{display:flex;gap:10px;flex-wrap:wrap;}
+
+  .section{background:var(--panel-alt);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:16px;}
+  .section h3{
+    font-family:'JetBrains Mono';font-size:11.5px;color:var(--teal);text-transform:uppercase;
+    letter-spacing:0.14em;margin:0 0 16px;padding-bottom:10px;border-bottom:1px solid var(--line);
+  }
+  .field-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px 18px;}
+  .field label{display:block;font-family:'JetBrains Mono';font-size:10.5px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;}
+  .field input, .field select{
+    width:100%;background:var(--bg);border:1px solid var(--line);border-radius:7px;
+    padding:9px 11px;color:var(--text);font-family:'Inter';font-size:13.5px;outline:none;
+    transition:border-color .15s;
+  }
+  .field input:focus, .field select:focus{border-color:var(--teal);}
+  .field.readonly input{color:var(--muted);}
+
+  .fixed-save-btn {
+    position: fixed;
+    /* UPDATED: Raised above the footer */
+    bottom: 70px; 
+    right: 30px;
+    z-index: 100;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.03em;
+    padding: 10px 20px;
+    border-radius: 12px;
+    border: none;
+    background: var(--amber);
+    color: #1a1305;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: all .2s;
+    text-transform: uppercase;
+    font-weight: 600;
+    box-shadow: 0 8px 32px rgba(227, 165, 66, 0.3);
+  }
+  .fixed-save-btn:hover {
+    background: #f0b158;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(227, 165, 66, 0.4);
+  }
+  .fixed-save-btn svg {
+    width: 15px;
+    height: 15px;
+  }
+  .fixed-save-btn.hidden {
+    display: none;
+  }
+
+  .extra-assets-panel,
+  .rental-panel,
+  .swap-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: var(--bg);
+    z-index: 200;
+    overflow-y: auto;
+    padding: 30px 40px;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    /* UPDATED: Added padding for footer */
+    padding-bottom: 60px;
+  }
+  .extra-assets-panel.open,
+  .rental-panel.open,
+  .swap-panel.open {
+    display: block;
+    opacity: 1;
+  }
+
+  .extra-assets-panel .panel-header,
+  .rental-panel .panel-header,
+  .swap-panel .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--line);
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+    padding-top: 10px;
+  }
+
+  .extra-assets-panel .panel-header h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    margin: 0;
+    color: var(--purple);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .rental-panel .panel-header h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    margin: 0;
+    color: var(--rental-color);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .swap-panel .panel-header h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    margin: 0;
+    color: var(--swap-color);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .extra-assets-panel .panel-header .close-btn,
+  .rental-panel .panel-header .close-btn,
+  .swap-panel .panel-header .close-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 32px;
+    transition: color .2s;
+    padding: 0 12px;
+    line-height: 1;
+  }
+  .extra-assets-panel .panel-header .close-btn:hover,
+  .rental-panel .panel-header .close-btn:hover,
+  .swap-panel .panel-header .close-btn:hover {
+    color: var(--danger);
+  }
+
+  .panel-content {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .panel-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    text-decoration: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    transition: all .2s;
+    background: var(--panel-alt);
+  }
+  .panel-back-btn:hover {
+    color: var(--teal);
+    border-color: var(--teal);
+  }
+  .panel-back-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .extra-assets-panel .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--purple);
+  }
+
+  .extra-assets-panel .asset-category {
+    background: var(--panel-alt);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .extra-assets-panel .asset-category .cat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .extra-assets-panel .asset-category .cat-header h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--teal);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0;
+  }
+  .extra-assets-panel .asset-category .cat-header .count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    background: var(--bg);
+    padding: 2px 10px;
+    border-radius: 12px;
+  }
+  .extra-assets-panel .asset-item {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+  }
+  .extra-assets-panel .asset-item:last-child {
+    border-bottom: none;
+  }
+  .extra-assets-panel .asset-item .item-detail {
+    flex: 1;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+  }
+  .extra-assets-panel .asset-item .item-detail .spec {
+    color: var(--muted);
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .extra-assets-panel .asset-item .remove-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all .15s;
+    font-size: 13px;
+  }
+  .extra-assets-panel .asset-item .remove-btn:hover {
+    color: var(--danger);
+    background: rgba(224, 104, 95, 0.2);
+  }
+  
+  .extra-assets-panel .add-asset-form {
+    background: var(--panel-alt);
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 30px;
+  }
+  .extra-assets-panel .add-asset-form h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--teal);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 10px;
+  }
+  .extra-assets-panel .add-asset-form .form-group {
+    margin-bottom: 10px;
+  }
+  .extra-assets-panel .add-asset-form .form-group label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+  .extra-assets-panel .add-asset-form .form-group select,
+  .extra-assets-panel .add-asset-form .form-group input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .extra-assets-panel .add-asset-form .form-group select:focus,
+  .extra-assets-panel .add-asset-form .form-group input:focus {
+    border-color: var(--teal);
+  }
+  .extra-assets-panel .add-asset-form .form-group select option {
+    background: var(--panel);
+    color: var(--text);
+  }
+  .extra-assets-panel .add-asset-form .add-btn {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--purple);
+    background: var(--purple-dim);
+    color: var(--purple);
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    transition: all .15s;
+    margin-top: 4px;
+  }
+  .extra-assets-panel .add-asset-form .add-btn:hover {
+    background: var(--purple);
+    color: #fff;
+  }
+
+  .rental-panel .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--rental-color);
+  }
+  .rental-panel .add-rental-form {
+    background: var(--panel-alt);
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+  }
+  .rental-panel .add-rental-form h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--teal);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 10px;
+  }
+  .rental-panel .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .rental-panel .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+  .rental-panel .form-group label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .rental-panel .form-group input,
+  .rental-panel .form-group select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .rental-panel .form-group input:focus,
+  .rental-panel .form-group select:focus {
+    border-color: var(--teal);
+  }
+  .rental-panel .form-group input::placeholder {
+    color: var(--muted);
+  }
+  .rental-panel .form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    justify-content: flex-end;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+  .date-btn-group {
+    display: flex;
+    gap: 6px;
+  }
+  .date-btn-group .today-btn {
+    background: var(--amber-dim);
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    white-space: nowrap;
+    transition: all .15s;
+  }
+  .date-btn-group .today-btn:hover {
+    background: var(--amber);
+    color: #1a1305;
+  }
+  .typing-date-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .15s;
+    cursor: text;
+  }
+  .typing-date-input:focus {
+    border-color: var(--teal);
+  }
+  .typing-date-input::placeholder {
+    color: var(--muted);
+    letter-spacing: 1px;
+    font-size: 12px;
+  }
+  
+  .batch-input-highlight {
+    border-color: var(--rental-color) !important;
+    box-shadow: 0 0 8px rgba(243, 156, 18, 0.2);
+  }
+  
+  .rental-panel .rental-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .rental-panel .rental-table th {
+    background: var(--panel-alt);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 12px 8px;
+    border-bottom: 2px solid var(--line);
+    text-align: center;
+  }
+  .rental-panel .rental-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+    text-align: center;
+    color: var(--text);
+    vertical-align: middle;
+  }
+  .rental-panel .rental-table tr:last-child td {
+    border-bottom: none;
+  }
+  .rental-panel .rental-table .total-row td {
+    background: var(--teal-dim);
+    color: var(--teal);
+    font-weight: 700;
+    font-family: 'Space Grotesk', sans-serif;
+    border-top: 2px solid var(--teal);
+  }
+  
+  .rental-panel .rental-table .batch-group-row td {
+    background: var(--rental-dim);
+    color: var(--rental-color);
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    text-align: left;
+    padding: 12px 15px;
+    border-top: 2px solid var(--rental-color);
+    border-bottom: 2px solid var(--rental-color);
+  }
+  
+  .rental-panel .rental-table .actions-cell {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+  }
+  .rental-panel .edit-btn, .rental-panel .delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background .15s;
+  }
+  .rental-panel .edit-btn:hover { background: var(--teal-dim); }
+  .rental-panel .delete-btn:hover { background: var(--danger-dim); }
+
+  /* ============================================================
+     SWAP PARTS PANEL STYLES
+     ============================================================ */
+  .swap-panel .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--swap-color);
+  }
+
+  .swap-panel .swap-form {
+    background: var(--panel-alt);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+  }
+
+  .swap-panel .swap-form h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--teal);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 10px;
+  }
+
+  .swap-panel .swap-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .swap-panel .swap-group {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .swap-panel .swap-group .group-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--swap-color);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .swap-panel .swap-group select {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .15s;
+    margin-bottom: 8px;
+  }
+
+  .swap-panel .swap-group select:focus {
+    border-color: var(--swap-color);
+  }
+
+  .swap-panel .swap-group select option {
+    background: var(--panel);
+    color: var(--text);
+  }
+
+  .swap-panel .swap-group .seat-info {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 8px;
+    background: var(--panel-alt);
+    border-radius: 4px;
+    margin-top: 4px;
+    min-height: 40px;
+  }
+
+  .swap-panel .swap-group .seat-info .highlight {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .swap-panel .swap-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+
+  .swap-panel .swap-preview {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  .swap-panel .swap-preview .preview-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--teal);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+  }
+
+  .swap-panel .swap-preview .preview-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .swap-panel .swap-preview .preview-item {
+    background: var(--panel-alt);
+    border-radius: 6px;
+    padding: 10px 14px;
+    border-left: 3px solid var(--swap-color);
+  }
+
+  .swap-panel .swap-preview .preview-item .label {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .swap-panel .swap-preview .preview-item .value {
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  .swap-panel .swap-preview .preview-item .arrow {
+    color: var(--swap-color);
+    font-size: 18px;
+    margin: 0 8px;
+  }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 300;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.active {
+    display: flex;
+  }
+
+  .add-seat-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 400;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+  }
+  .add-seat-modal.active {
+    display: flex;
+  }
+  .add-seat-modal .modal-content {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 450px;
+    width: 90%;
+  }
+  .add-seat-modal .modal-content h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    margin: 0 0 8px 0;
+    color: var(--text);
+  }
+  .add-seat-modal .modal-content .subtitle {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  .add-seat-modal .modal-content .form-group {
+    margin-bottom: 16px;
+  }
+  .add-seat-modal .modal-content .form-group label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .add-seat-modal .modal-content .form-group input {
+    width: 100%;
+    background: var(--panel-alt);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .add-seat-modal .modal-content .form-group input:focus {
+    border-color: var(--teal);
+  }
+  .add-seat-modal .modal-content .form-group input::placeholder {
+    color: var(--muted);
+  }
+  .add-seat-modal .modal-content .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+  }
+  .add-seat-modal .modal-content .modal-actions .btn {
+    padding: 10px 24px;
+    min-width: 100px;
+    justify-content: center;
+  }
+  .add-seat-modal .modal-content .error-msg {
+    color: var(--danger);
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    margin-top: 8px;
+    display: none;
+  }
+  .add-seat-modal .modal-content .error-msg.show {
+    display: block;
+  }
+
+  .delete-confirm-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 400;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+  }
+  .delete-confirm-modal.active {
+    display: flex;
+  }
+  .delete-confirm-modal .modal-content {
+    background: var(--panel);
+    border: 1px solid var(--danger);
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 420px;
+    width: 90%;
+  }
+  .delete-confirm-modal .modal-content h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    margin: 0 0 8px 0;
+    color: var(--danger);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .delete-confirm-modal .modal-content h2 svg {
+    width: 28px;
+    height: 28px;
+  }
+  .delete-confirm-modal .modal-content .subtitle {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  .delete-confirm-modal .modal-content .warning-text {
+    background: var(--danger-dim);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--danger);
+    font-size: 13px;
+    margin-bottom: 20px;
+    border-left: 3px solid var(--danger);
+  }
+  .delete-confirm-modal .modal-content .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+  }
+  .delete-confirm-modal .modal-content .modal-actions .btn {
+    padding: 10px 24px;
+    min-width: 100px;
+    justify-content: center;
+  }
+
+  /* Rental Delete Modal */
+  .rental-delete-modal .modal-content {
+    max-width: 450px;
+  }
+  .rental-delete-modal .rental-summary {
+    background: var(--panel);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    border: 1px solid var(--line);
+  }
+  .rental-delete-modal .rental-summary div {
+    margin: 4px 0;
+  }
+  .rental-delete-modal .rental-summary .label {
+    color: var(--muted);
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+  }
+  .rental-delete-modal .rental-summary .value {
+    font-weight: 600;
+    color: var(--text);
+  }
+  .rental-delete-modal .rental-summary .highlight {
+    color: var(--rental-color);
+  }
+
+  /* Extra Asset Edit Modal */
+  #extraAssetEditModal .modal {
+    max-width: 450px;
+  }
+  #extraAssetEditModal .form-group {
+    margin-bottom: 16px;
+  }
+  #extraAssetEditModal .form-group label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  #extraAssetEditModal .form-group input,
+  #extraAssetEditModal .form-group select {
+    width: 100%;
+    background: var(--panel-alt);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  #extraAssetEditModal .form-group input:focus,
+  #extraAssetEditModal .form-group select:focus {
+    border-color: var(--purple);
+  }
+
+  /* Extra Asset Delete Modal */
+  #extraAssetDeleteModal .modal-content {
+    max-width: 420px;
+  }
+
+  /* Edit mode highlight */
+  .rental-edit-mode {
+    border-left: 3px solid var(--rental-color) !important;
+    padding-left: 17px !important;
+  }
+  .form-title-edit {
+    color: var(--rental-color) !important;
+  }
+
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  .modal h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    margin: 0 0 8px 0;
+    color: var(--text);
+  }
+  .modal .subtitle {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  .modal .form-group {
+    margin-bottom: 16px;
+  }
+  .modal .form-group label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .modal .form-group select,
+  .modal .form-group input {
+    width: 100%;
+    background: var(--panel-alt);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .modal .form-group select:focus,
+  .modal .form-group input:focus {
+    border-color: var(--teal);
+  }
+  .modal .form-group select option {
+    background: var(--panel);
+    color: var(--text);
+  }
+  .modal .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+  }
+  .modal .modal-actions .btn {
+    padding: 10px 24px;
+  }
+  .modal .move-info {
+    background: var(--panel-alt);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 12px 0 16px 0;
+    border-left: 3px solid var(--amber);
+  }
+  .modal .move-info .label {
+    color: var(--muted);
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .modal .move-info .value {
+    font-size: 15px;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .modal .warning {
+    color: var(--amber);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: var(--amber-dim);
+    border-radius: 6px;
+  }
+  .modal .warning svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--panel-alt);border:1px solid var(--teal);color:var(--teal);
+    padding:12px 22px;border-radius:8px;font-family:'JetBrains Mono';font-size:12.5px;
+    opacity:0;pointer-events:none;transition:all .25s;z-index:50;
+    display:flex;align-items:center;gap:8px;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .empty-state{text-align:center;padding:60px 20px;color:var(--muted);font-family:'JetBrains Mono';font-size:13px;}
+
+  /* Swap Confirm Modal */
+  .swap-confirm-modal .modal-content {
+    max-width: 500px;
+  }
+  .swap-confirm-modal .swap-details {
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+    border: 1px solid var(--line);
+  }
+  .swap-confirm-modal .swap-details .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .swap-confirm-modal .swap-details .row:last-child {
+    border-bottom: none;
+  }
+  .swap-confirm-modal .swap-details .from {
+    color: var(--swap-color);
+  }
+  .swap-confirm-modal .swap-details .to {
+    color: var(--teal);
+  }
+  .swap-confirm-modal .swap-details .arrow-icon {
+    color: var(--muted);
+    padding: 0 10px;
+  }
+
+  @media (max-width:768px) {
+    .extra-assets-panel,
+    .rental-panel,
+    .swap-panel {
+      padding: 16px;
+    }
+    .extra-assets-panel .panel-header h2,
+    .rental-panel .panel-header h2,
+    .swap-panel .panel-header h2 {
+      font-size: 20px;
+    }
+    .extra-assets-toggle,
+    .rental-toggle,
+    .swap-toggle {
+      padding: 12px 8px;
+      font-size: 10px;
+    }
+    .left-panel {
+      width: 100%;
+      position: relative;
+      top: 0;
+      max-height: 250px;
+    }
+    .dashboard-layout {
+      flex-direction: column;
+      padding: 12px 16px 60px;
+      gap: 16px;
+    }
+    .right-panel .system-details-grid,
+    .right-panel .extra-assets-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .swap-panel .swap-grid {
+      grid-template-columns: 1fr;
+    }
+    .swap-panel .swap-preview .preview-grid {
+      grid-template-columns: 1fr;
+    }
+    .stats {
+      padding: 0 16px;
+    }
+    .topbar{padding:14px 16px;}
+    .search-wrap input{width:160px;}
+    .fixed-save-btn {
+      bottom: 46px; /* UPDATED: Raised above footer */
+      right: 16px;
+      padding: 12px 20px;
+      font-size: 11px;
+      border-radius: 10px;
+    }
+    .fixed-save-btn svg {
+      width: 15px;
+      height: 15px;
+    }
+    .modal {
+      padding: 20px;
+      max-width: 95%;
+    }
+    .detail-actions {
+      flex-direction: column;
+      width: 100%;
+    }
+    .detail-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+    .add-seat-modal .modal-content {
+      padding: 20px;
+    }
+    .delete-confirm-modal .modal-content {
+      padding: 20px;
+    }
+    .rental-panel .rental-table {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .rental-panel .form-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .date-btn-group {
+      flex-direction: column;
+    }
+  }
+
+  @media (max-width:480px) {
+    .right-panel .system-details-grid,
+    .right-panel .extra-assets-grid {
+      grid-template-columns: 1fr;
+    }
+    .rental-panel .form-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-wrapper">
+  <!-- Extra Assets Toggle Button -->
+  <button class="extra-assets-toggle" id="extraAssetsToggle" title="Open Extra Assets">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+    </svg>
+    EXTRA
+  </button>
+
+  <!-- Rental Toggle Button -->
+  <button class="rental-toggle" id="rentalToggle" title="Open Rental Details">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+      <path d="M8 12h8M8 16h6"/>
+    </svg>
+    RENTAL
+  </button>
+
+  <!-- Swap Parts Toggle Button -->
+  <button class="swap-toggle" id="swapToggle" title="Open Swap Parts">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M7 10l5-5 5 5M17 14l-5 5-5-5"/>
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+    </svg>
+    SWAP
+  </button>
+
+  <!-- Extra Assets Panel -->
+  <div class="extra-assets-panel" id="extraAssetsPanel">
+    <div class="panel-header">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:28px;height:28px;">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        </svg>
+        Extra Assets
+      </h2>
+      <button class="close-btn" id="closeExtraAssets">&times;</button>
+    </div>
+    
+    <div class="panel-content">
+      <div class="panel-back-btn" id="backFromExtra">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back to Dashboard
+      </div>
+
+      <div class="add-asset-form">
+        <h3>Add New Extra Asset</h3>
+        <div class="form-group">
+          <label for="assetType">Asset Type</label>
+          <select id="assetType">
+            <option value="cpu">CPU</option>
+            <option value="monitor">Monitor</option>
+            <option value="keyboard">Keyboard</option>
+            <option value="mouse">Mouse</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="assetBrand">Brand</label>
+          <select id="assetBrand">
+            <option value="">Select Brand...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="assetQuantity">Quantity</label>
+          <input type="number" id="assetQuantity" placeholder="Enter quantity..." min="1" value="1">
+        </div>
+        <button class="add-btn" id="addExtraAsset">+ Add Asset</button>
+      </div>
+
+      <div class="section-title">Extra Assets List</div>
+      <div id="extraAssetsList"></div>
+    </div>
+  </div>
+
+  <!-- Rental Details Panel -->
+  <div class="rental-panel" id="rentalPanel">
+    <div class="panel-header">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:28px;height:28px;">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+          <path d="M8 12h8M8 16h6"/>
+        </svg>
+        Rental Details
+      </h2>
+      <button class="close-btn" id="closeRentalPanel">&times;</button>
+    </div>
+    
+    <div class="panel-content">
+      <div class="panel-back-btn" id="backFromRental">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back to Dashboard
+      </div>
+
+      <div class="add-rental-form">
+        <h3 id="formTitle">Add New Rental Item</h3>
+        <div class="form-grid">
+          
+          <div class="form-group" style="grid-column: span 2;">
+            <label for="rentalBatchNo">🏷️ Batch No (Important)</label>
+            <input type="text" id="rentalBatchNo" class="batch-input-highlight" placeholder="e.g., BATCH-01">
+          </div>
+
+          <div class="form-group">
+            <label for="rentalCpu">CPU Total</label>
+            <input type="number" id="rentalCpu" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label for="rentalMonitor">Total Monitor</label>
+            <input type="number" id="rentalMonitor" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label for="rentalMonitorInch">Monitor Inch</label>
+            <input type="text" id="rentalMonitorInch" placeholder='e.g., 22"'>
+          </div>
+          <div class="form-group">
+            <label for="rentalKeyboard">Total Keyboard</label>
+            <input type="number" id="rentalKeyboard" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label for="rentalMouse">Total Mouse</label>
+            <input type="number" id="rentalMouse" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label for="rentalCpuSpec">CPU Spec</label>
+            <input type="text" id="rentalCpuSpec" placeholder="e.g., DELL i5 7th - 250 SSD">
+          </div>
+          <div class="form-group">
+            <label for="rentalOldPcs">Old PCs</label>
+            <input type="text" id="rentalOldPcs" placeholder="Old PC Tag">
+          </div>
+          <div class="form-group">
+            <label for="rentalServiceTag">Service Tag</label>
+            <input type="text" id="rentalServiceTag" placeholder="Service Tag">
+          </div>
+          <div class="form-group">
+            <label for="rentalRequestDate">Request Date</label>
+            <div class="date-btn-group">
+              <input type="text" id="rentalRequestDate" class="typing-date-input" placeholder="DD-MM-YYYY" maxlength="10" oninput="autoFormatDate(this)">
+              <button class="today-btn" onclick="setTodayDate('rentalRequestDate')">Today</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="rentalReceivedDate">Received Date</label>
+            <div class="date-btn-group">
+              <input type="text" id="rentalReceivedDate" class="typing-date-input" placeholder="DD-MM-YYYY" maxlength="10" oninput="autoFormatDate(this)">
+              <button class="today-btn" onclick="setTodayDate('rentalReceivedDate')">Today</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="rentalProblemDate">Problem Date</label>
+            <div class="date-btn-group">
+              <input type="text" id="rentalProblemDate" class="typing-date-input" placeholder="DD-MM-YYYY" maxlength="10" oninput="autoFormatDate(this); calculateIdealDays();">
+              <button class="today-btn" onclick="setTodayDate('rentalProblemDate'); calculateIdealDays();">Today</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="rentalProblemItems">Problem Items</label>
+            <input type="text" id="rentalProblemItems" placeholder="e.g., CPU 1">
+          </div>
+          <div class="form-group">
+            <label for="rentalReplacementDate">Replacement Date</label>
+            <div class="date-btn-group">
+              <input type="text" id="rentalReplacementDate" class="typing-date-input" placeholder="DD-MM-YYYY" maxlength="10" oninput="autoFormatDate(this); calculateIdealDays();">
+              <button class="today-btn" onclick="setTodayDate('rentalReplacementDate'); calculateIdealDays();">Today</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="rentalReturnDate">Return Date</label>
+            <div class="date-btn-group">
+              <input type="text" id="rentalReturnDate" class="typing-date-input" placeholder="DD-MM-YYYY" maxlength="10" oninput="autoFormatDate(this); calculateIdealDays();">
+              <button class="today-btn" onclick="setTodayDate('rentalReturnDate'); calculateIdealDays();">Today</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="rentalIdealDays">Ideal of days not working</label>
+            <input type="text" id="rentalIdealDays" placeholder="Auto-calculated" readonly style="background-color: var(--teal-dim); color: var(--teal); font-weight: bold;">
+          </div>
+          <div class="form-group">
+            <label for="rentalRemarks">Remarks</label>
+            <input type="text" id="rentalRemarks" placeholder="Remarks...">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn ghost" id="cancelEditBtn" style="display:none;">Cancel Edit</button>
+          <button class="btn success" id="addRentalItem">+ Add Rental Item</button>
+        </div>
+      </div>
+
+      <div class="section-title">Rental Systems List (Grouped by Batch)</div>
+      <div id="rentalList"></div>
+    </div>
+  </div>
+
+  <!-- SWAP PARTS PANEL -->
+  <div class="swap-panel" id="swapPanel">
+    <div class="panel-header">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:28px;height:28px;">
+          <path d="M7 10l5-5 5 5M17 14l-5 5-5-5"/>
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+        </svg>
+        Swap Parts
+      </h2>
+      <button class="close-btn" id="closeSwapPanel">&times;</button>
+    </div>
+    
+    <div class="panel-content">
+      <div class="panel-back-btn" id="backFromSwap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back to Dashboard
+      </div>
+
+      <div class="section-title">🔄 Swap System Parts Between Seats</div>
+      
+      <div class="swap-form">
+        <h3>Select Part Type and Source/Destination Seats</h3>
+        <div class="swap-grid">
+          <!-- Part Type Selection -->
+          <div class="swap-group">
+            <div class="group-title">🔧 Part to Swap</div>
+            <select id="swapPartType">
+              <option value="cpu">CPU (Desktop, Processor, RAM, etc.)</option>
+              <option value="monitor">Monitor (Monitor 1 & 2)</option>
+              <option value="keyboard">Keyboard</option>
+              <option value="mouse">Mouse</option>
+            </select>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;">
+              Select which component to swap between seats
+            </div>
+          </div>
+
+          <!-- Source Seat -->
+          <div class="swap-group">
+            <div class="group-title">📤 From Seat (Source)</div>
+            <select id="swapSourceSeat">
+              <option value="">Select source seat...</option>
+            </select>
+            <div class="seat-info" id="swapSourceInfo">
+              <span style="color:var(--muted);">Select a seat to see details</span>
+            </div>
+          </div>
+
+          <!-- Destination Seat -->
+          <div class="swap-group">
+            <div class="group-title">📥 To Seat (Destination)</div>
+            <select id="swapDestSeat">
+              <option value="">Select destination seat...</option>
+            </select>
+            <div class="seat-info" id="swapDestInfo">
+              <span style="color:var(--muted);">Select a seat to see details</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview Section -->
+        <div class="swap-preview" id="swapPreview">
+          <div class="preview-title">📋 Swap Preview</div>
+          <div id="swapPreviewContent" style="color:var(--muted);text-align:center;padding:10px;">
+            Select part type and both seats to see preview
+          </div>
+        </div>
+
+        <div class="swap-actions">
+          <button class="btn ghost" id="clearSwapBtn">Clear Selection</button>
+          <button class="btn swap-btn" id="executeSwapBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;">
+              <path d="M7 10l5-5 5 5M17 14l-5 5-5-5"/>
+            </svg>
+            Execute Swap
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content" id="mainContent">
+    <div class="topbar">
+      <div class="brand">
+        <span class="eyebrow">IT Infrastructure</span>
+        <h1>Asset Register</h1>
+      </div>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" id="searchInput" placeholder="Search seat, name, desktop, IP...">
+      </div>
+      <button class="btn ghost" id="syncBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
+        Sync
+      </button>
+      <button class="btn ghost" id="backupBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+        Backup
+      </button>
+      <button class="btn ghost" id="restoreBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Restore
+      </button>
+      
+      <button class="btn primary" id="exportBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+        Export Report
+      </button>
+      <button class="btn ghost" id="pathManagerBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+        </svg>
+        Path Manager
+      </button>
+    </div>
+
+    <!-- PATH MANAGER MODAL -->
+    <div class="modal-overlay" id="pathManagerModal" style="z-index: 500;">
+      <div class="modal" style="max-width: 900px; width: 95%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--line); padding-bottom: 15px; margin-bottom: 20px;">
+          <h2 style="margin:0; font-family: 'Space Grotesk', sans-serif;">🗂️ Backup Path Manager</h2>
+          <button class="close-btn" onclick="closePathManager()" style="background:none;border:none;color:var(--muted);font-size:28px;cursor:pointer;">&times;</button>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap; align-items: center;">
+          <select id="pmCategoryFilter" style="background:var(--panel-alt);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:8px;font-family:'Inter';font-size:13px; min-width: 160px;" onchange="refreshPMTable()">
+            <option value="All Categories">All Categories</option>
+          </select>
+          <input type="text" id="pmSearch" placeholder="Search paths..." style="flex:1;background:var(--panel-alt);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:8px 12px;font-family:'Inter';font-size:13px;" oninput="refreshPMTable()">
+          <button class="btn ghost" onclick="openQuickBrowse()">📂 Browse Path</button>
+        </div>
+
+        <div style="overflow-y:auto; max-height: 400px; border:1px solid var(--line); border-radius:8px; margin-top: 10px;">
+          <table style="width:100%; border-collapse:collapse; background:var(--panel); text-align: center;">
+            <thead>
+              <tr style="background: var(--panel-alt);">
+                <th style="padding: 12px;">Category</th>
+                <th style="padding: 12px;">Backup Name</th>
+                <th style="padding: 12px;">Folder Path</th>
+                <th style="padding: 12px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="pmTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="pmFormModal" style="z-index: 600;">
+      <div class="modal" style="max-width: 500px; width: 90%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--line); padding-bottom: 10px; margin-bottom: 20px;">
+          <h2 id="pmFormTitle" style="margin:0; font-family: 'Space Grotesk', sans-serif;">Add New Path</h2>
+          <button class="close-btn" onclick="closePMForm()" style="background:none;border:none;color:var(--muted);font-size:28px;cursor:pointer;">&times;</button>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label style="display:block; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--muted); text-transform:uppercase; margin-bottom:5px;">Category</label>
+          <select id="pmFormCategory" style="width:100%; background:var(--panel-alt);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:10px;font-family:'Inter';font-size:14px;">
+            <option value="S3D">S3D</option>
+            <option value="PDS">PDS</option>
+            <option value="SPPID">SPPID</option>
+            <option value="SPI">SPI</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label style="display:block; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--muted); text-transform:uppercase; margin-bottom:5px;">Backup Name</label>
+          <input type="text" id="pmFormName" placeholder="e.g., Daily Backups" style="width:100%; background:var(--panel-alt);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:10px;font-family:'Inter';font-size:14px;">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <label style="display:block; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--muted); text-transform:uppercase; margin-bottom:5px;">Folder Path</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="pmFormPath" placeholder="e.g., //server/folder" style="flex:1; background:var(--panel-alt);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:10px;font-family:'Inter';font-size:14px;">
+            <button class="btn ghost" onclick="browsePMPath()" style="white-space:nowrap;">📂 Browse</button>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+          <button class="btn ghost" onclick="closePMForm()">Cancel</button>
+          <button class="btn primary" onclick="savePMForm()">Save Path</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats" id="mainStats">
+      <div class="stat occupied"><div class="num" id="statOccupied">0</div><div class="lbl">💺 Occupied</div></div>
+      <div class="stat vacant"><div class="num" id="statVacant">0</div><div class="lbl">🪑 Vacant</div></div>
+      <div class="stat"><div class="num" id="statTotal">0</div><div class="lbl">📊 Total Seats</div></div>
+      <div class="stat rental"><div class="num" id="statRentalItems">0</div><div class="lbl">📦 Rental Items</div></div>
+      <div class="stat purple"><div class="num" id="statExtraAssets">0</div><div class="lbl">📦 Extra Assets</div></div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="dashboard-layout">
+      <!-- Left Panel -->
+      <div class="left-panel" id="leftPanel">
+        <div class="panel-title">
+          <span>📋 Seats</span>
+          <span class="count-badge" id="seatCountBadge">0</span>
+        </div>
+        <div class="seat-list" id="seatList"></div>
+      </div>
+
+      <!-- Right Panel -->
+      <div class="right-panel">
+        <!-- User System Details -->
+        <div class="system-details-section">
+          <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>🖥️ User System Details</span>
+            <button class="btn success" id="addNewSeatFromDetailsBtn" style="padding:6px 14px;font-size:11px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              New Seat
+            </button>
+          </div>
+          <div class="system-details-grid">
+            <div class="detail-item">
+              <div class="detail-header">
+                <span class="detail-icon">🖥️</span>
+                <span class="detail-label">CPU Units</span>
+                <span class="detail-count" id="statCpuUnits">0</span>
+              </div>
+              <div class="detail-breakdown">
+                <span class="office">● Office <span id="statCpuOffice">0</span></span>
+                <span class="rental">○ Rental <span id="statCpuRental">0</span></span>
+              </div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-header">
+                <span class="detail-icon">🖥️</span>
+                <span class="detail-label">Monitors</span>
+                <span class="detail-count" id="statMonitors">0</span>
+              </div>
+              <div class="detail-breakdown">
+                <span class="office">● Office <span id="statMonitorOffice">0</span></span>
+                <span class="rental">○ Rental <span id="statMonitorRental">0</span></span>
+              </div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-header">
+                <span class="detail-icon">⌨️</span>
+                <span class="detail-label">Keyboards</span>
+                <span class="detail-count" id="statKeyboards">0</span>
+              </div>
+              <div class="detail-breakdown">
+                <span class="office">● Office <span id="statKeyboardOffice">0</span></span>
+                <span class="rental">○ Rental <span id="statKeyboardRental">0</span></span>
+              </div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-header">
+                <span class="detail-icon">🖱️</span>
+                <span class="detail-label">Mice</span>
+                <span class="detail-count" id="statMice">0</span>
+              </div>
+              <div class="detail-breakdown">
+                <span class="office">● Office <span id="statMouseOffice">0</span></span>
+                <span class="rental">○ Rental <span id="statMouseRental">0</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Extra Assets Summary -->
+        <div class="extra-assets-section">
+          <div class="section-title">
+            <span>📦 Extra Assets (Server Room)</span>
+          </div>
+          <div class="extra-assets-grid">
+            <div class="extra-asset-item">
+              <span class="label">🖥️ CPU Units</span>
+              <span class="count" id="statExtraCpu">0</span>
+            </div>
+            <div class="extra-asset-item">
+              <span class="label">🖥️ Monitors</span>
+              <span class="count" id="statExtraMonitor">0</span>
+            </div>
+            <div class="extra-asset-item">
+              <span class="label">⌨️ Keyboards</span>
+              <span class="count" id="statExtraKeyboard">0</span>
+            </div>
+            <div class="extra-asset-item">
+              <span class="label">🖱️ Mice</span>
+              <span class="count" id="statExtraMouse">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seat Details -->
+        <div class="seat-details-section">
+          <div id="rowGroups" class="row-groups hidden"></div>
+          <div class="detail" id="detailView">
+            <div class="empty-state">💺 Select a seat from the left panel to view details</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Seat Modal -->
+<div class="add-seat-modal" id="addSeatModal">
+  <div class="modal-content">
+    <h2>Add New Seat</h2>
+    <div class="subtitle">Enter the new seating ID</div>
+    <div class="form-group">
+      <label for="newSeatId">Seating ID</label>
+      <input type="text" id="newSeatId" placeholder="e.g., K1, B3, Z5" autofocus>
+      <div class="error-msg" id="seatError">This seating ID already exists. Please use a different ID.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="cancelAddSeat">Cancel</button>
+      <button class="btn primary" id="confirmAddSeat">Create Seat</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="delete-confirm-modal" id="deleteConfirmModal">
+  <div class="modal-content">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      Delete Seat
+    </h2>
+    <div class="subtitle">This action cannot be undone.</div>
+    <div class="warning-text">Are you sure you want to delete seat <strong id="deleteSeatIdDisplay">A1</strong>?</div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="cancelDelete">Cancel</button>
+      <button class="btn danger" id="confirmDelete">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+          <path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+        </svg>
+        Delete Permanently
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Move User Modal -->
+<div class="modal-overlay" id="moveModal">
+  <div class="modal">
+    <h2>Move User</h2>
+    <div class="subtitle">Transfer all user details and system information to another seat</div>
+    <div class="move-info" id="sourceInfo">
+      <div class="label">Source Seat</div>
+      <div class="value" id="sourceSeatDisplay">-</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:4px;" id="sourceEmployeeDisplay"></div>
+    </div>
+    <div class="form-group">
+      <label for="targetSeatSelect">Select Destination Seat</label>
+      <select id="targetSeatSelect">
+        <option value="">Loading seats...</option>
+      </select>
+    </div>
+    <div class="warning">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      This will overwrite any existing data at the destination seat.
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="cancelMoveBtn">Cancel</button>
+      <button class="btn success" id="confirmMoveBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+        Move User
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Rental Delete Confirmation Modal -->
+<div class="delete-confirm-modal rental-delete-modal" id="rentalDeleteModal">
+  <div class="modal-content">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:28px;height:28px;">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      Delete Rental Item
+    </h2>
+    <div class="subtitle">This action cannot be undone.</div>
+    <div class="rental-summary">
+      <div><span class="label">Batch No:</span> <span class="value highlight" id="rentalDeleteBatch">—</span></div>
+      <div><span class="label">CPU Spec:</span> <span class="value" id="rentalDeleteCpuSpec">—</span></div>
+      <div><span class="label">Service Tag:</span> <span class="value" id="rentalDeleteServiceTag">—</span></div>
+    </div>
+    <div class="warning-text">
+      Are you sure you want to delete this rental item?
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="cancelRentalDelete">Cancel</button>
+      <button class="btn danger" id="confirmRentalDelete">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+          <path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+        </svg>
+        Delete Permanently
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Extra Asset Edit Modal -->
+<div class="modal-overlay" id="extraAssetEditModal">
+  <div class="modal" style="max-width: 450px; width: 90%;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--line); padding-bottom: 10px; margin-bottom: 20px;">
+      <h2 id="extraAssetEditTitle" style="margin:0; font-family: 'Space Grotesk', sans-serif; color: var(--purple);">Edit Extra Asset</h2>
+      <button class="close-btn" onclick="closeExtraAssetEditModal()" style="background:none;border:none;color:var(--muted);font-size:28px;cursor:pointer;">&times;</button>
+    </div>
+    <div class="form-group">
+      <label style="display:block; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--muted); text-transform:uppercase; margin-bottom:5px;">Asset Type</label>
+      <select id="editAssetType" style="width:100%; background:var(--panel-alt);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:10px;font-family:'Inter';font-size:14px;">
+        <option value="cpu">CPU</option>
+        <option value="monitor">Monitor</option>
+        <option value="keyboard">Keyboard</option>
+        <option value="mouse">Mouse</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label style="display:block; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--muted); text-transform:uppercase; margin-bottom:5px;">Brand</label>
+      <input type="text" id="editAssetBrand" placeholder="Brand name" style="width:100%; background:var(--panel-alt);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:10px;font-family:'Inter';font-size:14px;">
+    </div>
+    <div class="form-group">
+      <label style="display:block; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--muted); text-transform:uppercase; margin-bottom:5px;">Quantity</label>
+      <input type="number" id="editAssetQuantity" placeholder="Quantity" min="1" style="width:100%; background:var(--panel-alt);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:10px;font-family:'Inter';font-size:14px;">
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px; border-top:1px solid var(--line); padding-top:16px;">
+      <button class="btn ghost" onclick="closeExtraAssetEditModal()">Cancel</button>
+      <button class="btn primary" id="saveExtraAssetEdit" style="background:var(--purple);border-color:var(--purple);color:#fff;">💾 Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Extra Asset Delete Confirmation Modal -->
+<div class="delete-confirm-modal" id="extraAssetDeleteModal">
+  <div class="modal-content" style="max-width: 420px;">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:28px;height:28px;">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      Delete Extra Asset
+    </h2>
+    <div class="subtitle">This action cannot be undone.</div>
+    <div style="background:var(--panel);border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:13px;border:1px solid var(--line);">
+      <div><span style="color:var(--muted);font-size:10px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;">Type:</span> <span style="font-weight:600;color:var(--purple);" id="extraAssetDeleteType">—</span></div>
+      <div><span style="color:var(--muted);font-size:10px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;">Brand:</span> <span style="font-weight:600;color:var(--text);" id="extraAssetDeleteBrand">—</span></div>
+      <div><span style="color:var(--muted);font-size:10px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;">Quantity:</span> <span style="font-weight:600;color:var(--text);" id="extraAssetDeleteQty">—</span></div>
+    </div>
+    <div style="background:var(--danger-dim);border-radius:8px;padding:12px 16px;color:var(--danger);font-size:13px;margin-bottom:20px;border-left:3px solid var(--danger);">
+      Are you sure you want to delete this asset?
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="cancelExtraAssetDelete">Cancel</button>
+      <button class="btn danger" id="confirmExtraAssetDelete">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+          <path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+        </svg>
+        Delete Permanently
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Swap Confirm Modal -->
+<div class="modal-overlay swap-confirm-modal" id="swapConfirmModal">
+  <div class="modal-content">
+    <h2>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:28px;height:28px;">
+        <path d="M7 10l5-5 5 5M17 14l-5 5-5-5"/>
+        <rect x="3" y="3" width="18" height="18" rx="2"/>
+      </svg>
+      Confirm Swap
+    </h2>
+    <div class="subtitle">Please confirm the part swap between seats</div>
+    <div class="swap-details" id="swapConfirmDetails">
+      <!-- Dynamically populated -->
+    </div>
+    <div style="background:var(--amber-dim);border-radius:8px;padding:12px 16px;color:var(--amber);font-size:13px;margin-bottom:20px;border-left:3px solid var(--amber);">
+      ⚠️ This action will overwrite the destination seat's data with the source seat's data.
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="cancelSwapConfirm">Cancel</button>
+      <button class="btn swap-btn" id="confirmSwapBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+          <path d="M7 10l5-5 5 5M17 14l-5 5-5-5"/>
+        </svg>
+        Confirm Swap
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// SAFE DOM HELPER
+// ============================================================
+function safeSetText(id, value) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.textContent = value;
+    return true;
+  }
+  return false;
+}
+
+const ASSET_DATA = [{"si_no": 1, "seating_id": "A1", "seating_availability": "Occupied", "employee_name": "6 MACHINE", "employee_id": null, "employment_type": null, "intercom_number": null, "desktop_name": "DESKTOP-DMOJDF2", "ip_address": null, "processor": "i7 11TH GEN", "ram": "32 GB", "graphics_card": "NVIDIA 710", "graphics_card_speed": null, "ssd": "500 GB", "hard_disk": null, "keyboard_brand": "DELL", "mouse_brand": "LOGITECH", "cpu_cabinet_brand": "COOLER MASTER", "cpu_cabinet_id": "SYS 6", "monitor1_brand": "ZEBSTER", "monitor1_id": "DDS-007", "monitor1_inches": 24, "monitor2_brand": null, "monitor2_id": null, "monitor2_inches": null, "ownership_cpu": "OFFICE", "ownership_monitor1": "OFFICE", "ownership_monitor2": null, "ownership_keyboard": "RENTAL", "ownership_mouse": "OFFICE"}, {"si_no": 2, "seating_id": "A2", "seating_availability": "Occupied", "employee_name": "23 MACHINE", "employee_id": null, "employment_type": null, "intercom_number": null, "desktop_name": "DDS-022", "ip_address": null, "processor": "i7 11TH GEN", "ram": "32 GB", "graphics_card": "NVIDIA 710", "graphics_card_speed": null, "ssd": "500 GB", "hard_disk": null, "keyboard_brand": "DELL", "mouse_brand": "LOGITECH", "cpu_cabinet_brand": "COOLER MASTER", "cpu_cabinet_id": "DDS-022", "monitor1_brand": "ZEBSTER", "monitor1_id": "DDS-037", "monitor1_inches": 24, "monitor2_brand": null, "monitor2_id": null, "monitor2_inches": null, "ownership_cpu": "OFFICE", "ownership_monitor1": "OFFICE", "ownership_monitor2": null, "ownership_keyboard": null, "ownership_mouse": null}];
+
+const FIELDS = [
+  {key:"seating_id", label:"Seating ID", section:"Basic", type:"text"},
+  {key:"seating_availability", label:"Status", section:"Basic", type:"select", options:["Occupied","Vacant"]},
+  {key:"employee_name", label:"Employee Name", section:"Employee Info", type:"text"},
+  {key:"employee_id", label:"Employee ID", section:"Employee Info", type:"text"},
+  {key:"employment_type", label:"Employment Type", section:"Employee Info", type:"text"},
+  {key:"intercom_number", label:"Intercom Number", section:"Employee Info", type:"text"},
+  {key:"desktop_name", label:"Desktop Name", section:"CPU Information", type:"text"},
+  {key:"ip_address", label:"IP Address", section:"CPU Information", type:"text"},
+  {key:"processor", label:"Processor", section:"CPU Information", type:"text"},
+  {key:"ram", label:"RAM", section:"CPU Information", type:"text"},
+  {key:"graphics_card", label:"Graphics Card", section:"CPU Information", type:"text"},
+  {key:"graphics_card_speed", label:"Graphics Card Speed", section:"CPU Information", type:"text"},
+  {key:"ssd", label:"SSD", section:"CPU Information", type:"text"},
+  {key:"hard_disk", label:"Hard Disk", section:"CPU Information", type:"text"},
+  {key:"cpu_cabinet_brand", label:"CPU Cabinet Brand", section:"CPU Information", type:"text"},
+  {key:"cpu_cabinet_id", label:"CPU Cabinet ID", section:"CPU Information", type:"text"},
+  {key:"ownership_cpu", label:"CPU Ownership", section:"CPU Information", type:"select", options:["OFFICE","RENTAL","OWN"]},
+  {key:"monitor1_brand", label:"Monitor 1 Brand", section:"Monitor Information", type:"text"},
+  {key:"monitor1_id", label:"Monitor 1 ID", section:"Monitor Information", type:"text"},
+  {key:"monitor1_inches", label:"Monitor 1 Inches", section:"Monitor Information", type:"text"},
+  {key:"monitor2_brand", label:"Monitor 2 Brand", section:"Monitor Information", type:"text"},
+  {key:"monitor2_id", label:"Monitor 2 ID", section:"Monitor Information", type:"text"},
+  {key:"monitor2_inches", label:"Monitor 2 Inches", section:"Monitor Information", type:"text"},
+  {key:"ownership_monitor1", label:"Monitor 1 Ownership", section:"Monitor Information", type:"select", options:["OFFICE","RENTAL","OWN"]},
+  {key:"ownership_monitor2", label:"Monitor 2 Ownership", section:"Monitor Information", type:"select", options:["OFFICE","RENTAL","OWN"]},
+  {key:"keyboard_brand", label:"Keyboard Brand", section:"Keyboard Information", type:"text"},
+  {key:"ownership_keyboard", label:"Keyboard Ownership", section:"Keyboard Information", type:"select", options:["OFFICE","RENTAL","OWN"]},
+  {key:"mouse_brand", label:"Mouse Brand", section:"Mouse Information", type:"text"},
+  {key:"ownership_mouse", label:"Mouse Ownership", section:"Mouse Information", type:"select", options:["OFFICE","RENTAL","OWN"]},
+];
+
+const COLUMN_LABELS = FIELDS.map(f=>f.label);
+const SECTIONS = [...new Set(FIELDS.map(f=>f.section))];
+
+const BRAND_OPTIONS = {
+  cpu: ['ACER', 'DELL', 'ZEBRONICS', 'COOLER MASTER', 'POWER X'],
+  monitor: ['ACER', 'DELL', 'ZEBSTER', 'ZEBRONICS', 'THINK VISION', 'HP', 'KRYSTAA', 'VIEWSONIC', 'LENOVO', 'LG'],
+  keyboard: ['DELL', 'LOGITECH', 'HP', 'PORTRONIC', 'ZEBRONICS'],
+  mouse: ['DELL', 'LOGITECH', 'PORTRONICS', 'ZEBRONICS']
+};
+
+const ASSET_LABELS = {
+  cpu: 'CPU Units',
+  monitor: 'Monitors',
+  keyboard: 'Keyboards',
+  mouse: 'Mice'
+};
+
+// ============================================================
+// SWAP PART MAPPINGS
+// ============================================================
+const SWAP_FIELDS = {
+  cpu: {
+    label: 'CPU',
+    fields: ['desktop_name', 'ip_address', 'processor', 'ram', 'graphics_card', 'graphics_card_speed', 'ssd', 'hard_disk', 'cpu_cabinet_brand', 'cpu_cabinet_id', 'ownership_cpu'],
+    displayFields: ['desktop_name', 'processor', 'ram', 'ssd', 'cpu_cabinet_id']
+  },
+  monitor: {
+    label: 'Monitor',
+    fields: ['monitor1_brand', 'monitor1_id', 'monitor1_inches', 'monitor2_brand', 'monitor2_id', 'monitor2_inches', 'ownership_monitor1', 'ownership_monitor2'],
+    displayFields: ['monitor1_brand', 'monitor1_id', 'monitor1_inches', 'monitor2_brand', 'monitor2_id']
+  },
+  keyboard: {
+    label: 'Keyboard',
+    fields: ['keyboard_brand', 'ownership_keyboard'],
+    displayFields: ['keyboard_brand']
+  },
+  mouse: {
+    label: 'Mouse',
+    fields: ['mouse_brand', 'ownership_mouse'],
+    displayFields: ['mouse_brand']
+  }
+};
+
+// ============================================================
+// VARIABLES
+// ============================================================
+let extraAssets = {
+  cpu: [],
+  monitor: [],
+  keyboard: [],
+  mouse: []
+};
+
+let rentalItems = [];
+let data = JSON.parse(JSON.stringify(ASSET_DATA));
+let currentSeat = null;
+let isDataLoaded = false;
+let moveSourceSeat = null;
+let seatToDelete = null;
+let lastEditedSeat = null;
+let editingRentalIndex = -1;
+let rentalToDeleteIndex = -1;
+let editingExtraAsset = null;
+let extraAssetToDelete = null;
+let swapPending = null;
+let pmData = [];
+let pmEditingIndex = -1;
+
+const PM_DEFAULT_CATEGORIES = ["S3D", "PDS", "SPPID", "SPI", "Other"];
+
+// ============================================================
+// AUTO-FORMAT DATE FUNCTION
+// ============================================================
+function autoFormatDate(input) {
+  let value = input.value.replace(/\D/g, '');
+  if (value.length > 8) value = value.substring(0, 8);
+
+  if (value.length > 4) {
+    input.value = value.substring(0, 2) + '-' + value.substring(2, 4) + '-' + value.substring(4, 8);
+  } else if (value.length > 2) {
+    input.value = value.substring(0, 2) + '-' + value.substring(2, 4);
+  } else if (value.length > 0) {
+    input.value = value;
+  } else {
+    input.value = '';
+  }
+}
+
+function calculateIdealDays() {
+  const problemDateStr = document.getElementById('rentalProblemDate').value;
+  const replacementDateStr = document.getElementById('rentalReplacementDate').value;
+  const returnDateStr = document.getElementById('rentalReturnDate').value;
+  
+  const endDateStr = replacementDateStr || returnDateStr;
+
+  if (problemDateStr && endDateStr) {
+    const parts1 = problemDateStr.split('-');
+    const parts2 = endDateStr.split('-');
+
+    const startDate = new Date(parts1[2], parts1[1] - 1, parts1[0]);
+    const endDate = new Date(parts2[2], parts2[1] - 1, parts2[0]);
+
+    if (startDate <= endDate) {
+      const diffTime = endDate.getTime() - startDate.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      document.getElementById('rentalIdealDays').value = diffDays;
+    } else {
+      document.getElementById('rentalIdealDays').value = '';
+    }
+  } else {
+    document.getElementById('rentalIdealDays').value = '';
+  }
+}
+
+function setTodayDate(inputId) {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  document.getElementById(inputId).value = `${day}-${month}-${year}`;
+}
+
+// ============================================================
+// LOAD SAVED DATA
+// ============================================================
+async function loadSavedData() {
+  try {
+    if (window.assetAPI) {
+      const electronData = await window.assetAPI.loadData();
+      if (Array.isArray(electronData) && electronData.length) {
+        data = electronData;
+        isDataLoaded = true;
+      }
+      try {
+        const extraData = await window.assetAPI.loadExtraAssets();
+        if (extraData && typeof extraData === 'object') {
+          extraAssets = extraData;
+        }
+      } catch(e) {}
+      
+      try {
+        const rentalData = await window.assetAPI.loadRentalItems();
+        if (Array.isArray(rentalData)) {
+          rentalItems = rentalData;
+        }
+      } catch(e) {}
+      
+      loadPMData();
+    }
+  } catch(e) {
+    console.log('Electron API not available, using localStorage');
+  }
+  
+  loadPMData();
+}
+
+async function persist() { 
+  try { 
+    if (window.assetAPI) {
+      await window.assetAPI.saveData(data);
+      await window.assetAPI.saveExtraAssets(extraAssets);
+      await window.assetAPI.saveRentalItems(rentalItems);
+      autoSyncToCloud(); 
+    } else {
+      localStorage.setItem('assetData', JSON.stringify(data));
+      localStorage.setItem('extraAssets', JSON.stringify(extraAssets));
+      localStorage.setItem('rentalItems', JSON.stringify(rentalItems));
+    }
+  } catch(e) {
+    console.log('Failed to persist data:', e);
+  }
+}
+
+async function autoSyncToCloud() {
+  if (!window.assetAPI || !window.assetAPI.syncToCloud) return;
+
+  const allData = {
+    assets: data,
+    extraAssets: extraAssets,
+    rentalItems: rentalItems,
+    ipMapping: {},
+    paths: pmData
+  };
+
+  await window.assetAPI.syncToCloud(allData);
+}
+
+const rowGroupsEl = document.getElementById('rowGroups');
+const detailEl = document.getElementById('detailView');
+const searchInput = document.getElementById('searchInput');
+const statsEls = document.querySelectorAll('.stats');
+const seatListEl = document.getElementById('seatList');
+const seatCountBadge = document.getElementById('seatCountBadge');
+
+function rowLetter(seatId){
+  const m = /^[A-Za-z]+/.exec(seatId||'');
+  return m ? m[0].toUpperCase() : '?';
+}
+
+// ============================================================
+// PATH MANAGER
+// ============================================================
+function loadPMData() {
+  const saved = localStorage.getItem('backup_paths');
+  if (saved) {
+    try { pmData = JSON.parse(saved); } catch(e) { pmData = []; }
+  }
+}
+
+function savePMData() {
+  localStorage.setItem('backup_paths', JSON.stringify(pmData));
+}
+
+function normalizePath(path) {
+  if (!path) return "";
+  path = path.trim().replace(/\//g, "\\");
+  if (path.startsWith("\\") && !path.startsWith("\\\\")) {
+    path = "\\" + path;
+  }
+  return path;
+}
+
+function getAllCategories() {
+  let categories = PM_DEFAULT_CATEGORIES.slice();
+  pmData.forEach(item => {
+    if (item.category && !categories.includes(item.category)) {
+      categories.push(item.category);
+    }
+  });
+  return categories;
+}
+
+function openPathManager() {
+  loadPMData();
+  document.getElementById('pathManagerModal').classList.add('active');
+  
+  const catFilter = document.getElementById('pmCategoryFilter');
+  const cats = ['All Categories', ...getAllCategories()];
+  
+  catFilter.innerHTML = '';
+  cats.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    opt.textContent = cat;
+    catFilter.appendChild(opt);
+  });
+  catFilter.value = 'All Categories';
+  refreshPMTable();
+}
+
+function closePathManager() {
+  document.getElementById('pathManagerModal').classList.remove('active');
+}
+
+function refreshPMTable() {
+  const tbody = document.getElementById('pmTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  
+  const selectedCat = document.getElementById('pmCategoryFilter').value;
+  const search = document.getElementById('pmSearch').value.toLowerCase().trim();
+  
+  let count = 0;
+  pmData.forEach((item, index) => {
+    let category = item.category || 'Other';
+    let name = item.name || '';
+    let path = normalizePath(item.path || '');
+    
+    if (selectedCat !== 'All Categories' && category !== selectedCat) return;
+    
+    if (search) {
+      const searchContent = (category + " " + name + " " + path).toLowerCase();
+      if (!searchContent.includes(search)) return;
+    }
+    
+    const row = document.createElement('tr');
+    row.style.borderBottom = '1px solid var(--line)';
+    row.innerHTML = `
+      <td style="padding: 10px;">${category}</td>
+      <td style="padding: 10px; text-align:left;">${name}</td>
+      <td style="padding: 10px; text-align:left; word-break: break-all;">${path}</td>
+      <td style="padding: 10px;">
+        <div style="display:flex;gap:6px;justify-content:center;">
+          <button onclick="openPMFolder(${index})" title="Open Folder" style="background:none;border:none;cursor:pointer;font-size:16px;">📂</button>
+          <button onclick="editPMItem(${index})" title="Edit" style="background:none;border:none;cursor:pointer;font-size:16px;">✏️</button>
+          <button onclick="deletePMItem(${index})" title="Delete" style="background:none;border:none;cursor:pointer;font-size:16px;">🗑️</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(row);
+    count++;
+  });
+  
+  if (count === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px;">No paths found.</td></tr>`;
+  }
+}
+
+function openPMFolder(index) {
+  const path = normalizePath(pmData[index].path || '');
+  if (!path) return alert('Invalid Path');
+  
+  if (window.assetAPI && window.assetAPI.checkPathExists) {
+    window.assetAPI.checkPathExists(path).then(exists => {
+      if (exists) {
+        window.assetAPI.openFolder(path);
+      } else {
+        alert('Folder not available: ' + path);
+      }
+    });
+  } else {
+    alert('Path manager is only available inside the desktop app.');
+  }
+}
+
+function openAddPath() {
+  pmEditingIndex = -1;
+  document.getElementById('pmFormTitle').textContent = "Add New Path";
+  document.getElementById('pmFormName').value = '';
+  document.getElementById('pmFormPath').value = '';
+  document.getElementById('pmFormCategory').value = "S3D";
+  document.getElementById('pmFormModal').classList.add('active');
+}
+
+async function browsePMPath() {
+  if (window.assetAPI && window.assetAPI.browseFolder) {
+    const folderPath = await window.assetAPI.browseFolder();
+    if (folderPath) {
+      document.getElementById('pmFormPath').value = normalizePath(folderPath);
+    }
+  } else {
+    alert("Browse feature is only available inside the desktop app.");
+  }
+}
+
+function editPMItem(index) {
+  pmEditingIndex = index;
+  const item = pmData[index];
+  document.getElementById('pmFormTitle').textContent = "Edit Path";
+  document.getElementById('pmFormName').value = item.name || '';
+  document.getElementById('pmFormPath').value = item.path || '';
+  document.getElementById('pmFormCategory').value = item.category || "Other";
+  document.getElementById('pmFormModal').classList.add('active');
+}
+
+async function openQuickBrowse() {
+  if (window.assetAPI && window.assetAPI.browseFolder) {
+    const folderPath = await window.assetAPI.browseFolder();
+    if (folderPath) {
+      openAddPath();
+      document.getElementById('pmFormPath').value = normalizePath(folderPath);
+    }
+  } else {
+    alert("Browse feature is only available inside the desktop app.");
+  }
+}
+
+function closePMForm() {
+  document.getElementById('pmFormModal').classList.remove('active');
+}
+
+function savePMForm() {
+  const category = document.getElementById('pmFormCategory').value;
+  const name = document.getElementById('pmFormName').value.trim();
+  const path = normalizePath(document.getElementById('pmFormPath').value);
+
+  if (!name) return alert("Backup Name is required!");
+  if (!path) return alert("Folder Path is required!");
+
+  if (pmEditingIndex > -1) {
+    pmData[pmEditingIndex] = { category, name, path };
+    pmEditingIndex = -1;
+  } else {
+    pmData.push({ category, name, path });
+  }
+
+  savePMData();
+  closePMForm();
+  refreshPMTable();
+}
+
+function deletePMItem(index) {
+  if (!confirm(`Delete this path?\n\n${pmData[index].name}`)) return;
+  pmData.splice(index, 1);
+  savePMData();
+  refreshPMTable();
+}
+
+// ============================================================
+// RENDER FUNCTIONS
+// ============================================================
+function renderStats(){
+  const occ = data.filter(d=>d.seating_availability==='Occupied').length;
+  document.getElementById('statOccupied').textContent = occ;
+  document.getElementById('statVacant').textContent = data.length - occ;
+  document.getElementById('statTotal').textContent = data.length;
+  seatCountBadge.textContent = data.length;
+  document.getElementById('statRentalItems').textContent = rentalItems.length;
+  
+  let cpuCount = 0, monitorCount = 0, keyboardCount = 0, mouseCount = 0;
+  let cpuOffice = 0, cpuRental = 0;
+  let monitorOffice = 0, monitorRental = 0;
+  let keyboardOffice = 0, keyboardRental = 0;
+  let mouseOffice = 0, mouseRental = 0;
+  
+  data.forEach(d => {
+    if (d.ownership_cpu) {
+      cpuCount++;
+      if (d.ownership_cpu === 'OFFICE') cpuOffice++;
+      else if (d.ownership_cpu === 'RENTAL') cpuRental++;
+    }
+    if (d.ownership_monitor1) {
+      monitorCount++;
+      if (d.ownership_monitor1 === 'OFFICE') monitorOffice++;
+      else if (d.ownership_monitor1 === 'RENTAL') monitorRental++;
+    }
+    if (d.ownership_monitor2) {
+      monitorCount++;
+      if (d.ownership_monitor2 === 'OFFICE') monitorOffice++;
+      else if (d.ownership_monitor2 === 'RENTAL') monitorRental++;
+    }
+    if (d.ownership_keyboard) {
+      keyboardCount++;
+      if (d.ownership_keyboard === 'OFFICE') keyboardOffice++;
+      else if (d.ownership_keyboard === 'RENTAL') keyboardRental++;
+    }
+    if (d.ownership_mouse) {
+      mouseCount++;
+      if (d.ownership_mouse === 'OFFICE') mouseOffice++;
+      else if (d.ownership_mouse === 'RENTAL') mouseRental++;
+    }
+  });
+  
+  document.getElementById('statCpuUnits').textContent = cpuCount;
+  document.getElementById('statMonitors').textContent = monitorCount;
+  document.getElementById('statKeyboards').textContent = keyboardCount;
+  document.getElementById('statMice').textContent = mouseCount;
+  
+  document.getElementById('statCpuOffice').textContent = cpuOffice;
+  document.getElementById('statCpuRental').textContent = cpuRental;
+  document.getElementById('statMonitorOffice').textContent = monitorOffice;
+  document.getElementById('statMonitorRental').textContent = monitorRental;
+  document.getElementById('statKeyboardOffice').textContent = keyboardOffice;
+  document.getElementById('statKeyboardRental').textContent = keyboardRental;
+  document.getElementById('statMouseOffice').textContent = mouseOffice;
+  document.getElementById('statMouseRental').textContent = mouseRental;
+  
+  let extraCpu = 0, extraMonitor = 0, extraKeyboard = 0, extraMouse = 0;
+  
+  if (extraAssets.cpu) extraCpu = extraAssets.cpu.reduce((sum, item) => sum + item.quantity, 0);
+  if (extraAssets.monitor) extraMonitor = extraAssets.monitor.reduce((sum, item) => sum + item.quantity, 0);
+  if (extraAssets.keyboard) extraKeyboard = extraAssets.keyboard.reduce((sum, item) => sum + item.quantity, 0);
+  if (extraAssets.mouse) extraMouse = extraAssets.mouse.reduce((sum, item) => sum + item.quantity, 0);
+  
+  document.getElementById('statExtraCpu').textContent = extraCpu;
+  document.getElementById('statExtraMonitor').textContent = extraMonitor;
+  document.getElementById('statExtraKeyboard').textContent = extraKeyboard;
+  document.getElementById('statExtraMouse').textContent = extraMouse;
+  
+  const totalExtra = extraCpu + extraMonitor + extraKeyboard + extraMouse;
+  safeSetText('statExtraAssets', totalExtra);
+  
+  renderSeatList();
+  renderRentalItems();
+  populateSwapSeats();
+}
+
+function renderSeatList(filterText, highlightSeat) {
+  const searchTerm = (filterText || '').trim().toLowerCase();
+  let filtered = data;
+  
+  if (searchTerm) {
+    filtered = data.filter(d => {
+      const hay = [d.seating_id, d.employee_name, d.desktop_name, d.ip_address, d.employee_id, d.processor]
+        .map(v => (v || '').toString().toLowerCase()).join(' ');
+      return hay.includes(searchTerm);
+    });
+  }
+  
+  filtered.sort((a, b) => {
+    const aMatch = a.seating_id.match(/^([A-Z]+)(\d+)$/);
+    const bMatch = b.seating_id.match(/^([A-Z]+)(\d+)$/);
+    if (aMatch && bMatch) {
+      const letterCompare = aMatch[1].localeCompare(bMatch[1]);
+      if (letterCompare !== 0) return letterCompare;
+      return parseInt(aMatch[2]) - parseInt(bMatch[2]);
+    }
+    return a.seating_id.localeCompare(b.seating_id);
+  });
+  
+  if (filtered.length === 0) {
+    seatListEl.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:20px;text-align:center;">No seats found</div>`;
+    return;
+  }
+  
+  let html = '';
+  filtered.forEach(d => {
+    const isOccupied = d.seating_availability === 'Occupied';
+    const isHighlight = highlightSeat && d.seating_id === highlightSeat;
+    html += `
+      <div class="seat-list-item ${isOccupied ? 'occupied' : ''} ${isHighlight ? 'highlight-item' : ''}" data-seat-id="${d.seating_id}" onclick="openDetail('${d.seating_id}')">
+        <span class="status-dot ${isOccupied ? 'occupied' : 'vacant'} ${isHighlight ? 'highlight-dot' : ''}"></span>
+        <span class="seat-icon">💺</span>
+        <span class="seat-id">${d.seating_id}</span>
+        <div class="seat-info">
+          <div class="name">${d.employee_name || 'Vacant'}</div>
+          <div class="desktop">${d.desktop_name || '—'}</div>
+        </div>
+      </div>
+    `;
+  });
+  
+  seatListEl.innerHTML = html;
+}
+
+// ============================================================
+// SWAP SEATS POPULATE
+// ============================================================
+function populateSwapSeats() {
+  const sourceSelect = document.getElementById('swapSourceSeat');
+  const destSelect = document.getElementById('swapDestSeat');
+  
+  sourceSelect.innerHTML = '<option value="">Select source seat...</option>';
+  destSelect.innerHTML = '<option value="">Select destination seat...</option>';
+  
+  const sortedSeats = [...data].sort((a, b) => {
+    const aMatch = a.seating_id.match(/^([A-Z]+)(\d+)$/);
+    const bMatch = b.seating_id.match(/^([A-Z]+)(\d+)$/);
+    if (aMatch && bMatch) {
+      const letterCompare = aMatch[1].localeCompare(bMatch[1]);
+      if (letterCompare !== 0) return letterCompare;
+      return parseInt(aMatch[2]) - parseInt(bMatch[2]);
+    }
+    return a.seating_id.localeCompare(b.seating_id);
+  });
+  
+  sortedSeats.forEach(seat => {
+    const status = seat.seating_availability === 'Occupied' ? '🔴' : '🟢';
+    const name = seat.employee_name ? ` - ${seat.employee_name}` : '';
+    const opt1 = document.createElement('option');
+    opt1.value = seat.seating_id;
+    opt1.textContent = `${seat.seating_id}${name} (${seat.seating_availability})`;
+    sourceSelect.appendChild(opt1);
+    
+    const opt2 = document.createElement('option');
+    opt2.value = seat.seating_id;
+    opt2.textContent = `${seat.seating_id}${name} (${seat.seating_availability})`;
+    destSelect.appendChild(opt2);
+  });
+}
+
+// ============================================================
+// SWAP PREVIEW
+// ============================================================
+function updateSwapPreview() {
+  const partType = document.getElementById('swapPartType').value;
+  const sourceSeatId = document.getElementById('swapSourceSeat').value;
+  const destSeatId = document.getElementById('swapDestSeat').value;
+  const previewContent = document.getElementById('swapPreviewContent');
+  const sourceInfo = document.getElementById('swapSourceInfo');
+  const destInfo = document.getElementById('swapDestInfo');
+  
+  if (sourceSeatId) {
+    const src = data.find(d => d.seating_id === sourceSeatId);
+    if (src) {
+      const fields = SWAP_FIELDS[partType].displayFields;
+      const values = fields.map(f => src[f] || '—').join(' | ');
+      sourceInfo.innerHTML = `<span class="highlight">${sourceSeatId}</span>: ${src.employee_name || 'Vacant'} <br> <span style="font-size:11px;color:var(--muted);">${values}</span>`;
+    }
+  } else {
+    sourceInfo.innerHTML = `<span style="color:var(--muted);">Select a seat to see details</span>`;
+  }
+  
+  if (destSeatId) {
+    const dst = data.find(d => d.seating_id === destSeatId);
+    if (dst) {
+      const fields = SWAP_FIELDS[partType].displayFields;
+      const values = fields.map(f => dst[f] || '—').join(' | ');
+      destInfo.innerHTML = `<span class="highlight">${destSeatId}</span>: ${dst.employee_name || 'Vacant'} <br> <span style="font-size:11px;color:var(--muted);">${values}</span>`;
+    }
+  } else {
+    destInfo.innerHTML = `<span style="color:var(--muted);">Select a seat to see details</span>`;
+  }
+  
+  if (!sourceSeatId || !destSeatId || sourceSeatId === destSeatId) {
+    if (sourceSeatId && destSeatId && sourceSeatId === destSeatId) {
+      previewContent.innerHTML = '<span style="color:var(--danger);">⚠️ Source and destination seats cannot be the same!</span>';
+    } else {
+      previewContent.innerHTML = '<span style="color:var(--muted);">Select part type and both seats to see preview</span>';
+    }
+    return;
+  }
+  
+  const src = data.find(d => d.seating_id === sourceSeatId);
+  const dst = data.find(d => d.seating_id === destSeatId);
+  
+  if (!src || !dst) {
+    previewContent.innerHTML = '<span style="color:var(--danger);">❌ Seat not found</span>';
+    return;
+  }
+  
+  const swapInfo = SWAP_FIELDS[partType];
+  const fields = swapInfo.fields;
+  const label = swapInfo.label;
+  
+  let html = `<div class="preview-grid">`;
+  
+  fields.forEach(field => {
+    const fieldLabel = FIELDS.find(f => f.key === field)?.label || field;
+    const srcVal = src[field] || '—';
+    const dstVal = dst[field] || '—';
+    
+    html += `
+      <div class="preview-item">
+        <div class="label">${fieldLabel}</div>
+        <div class="value">
+          <span style="color:var(--swap-color);">${srcVal}</span>
+          <span class="arrow">↔</span>
+          <span style="color:var(--teal);">${dstVal}</span>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">
+          <span style="color:var(--swap-color);">${sourceSeatId}</span>
+          <span class="arrow">↔</span>
+          <span style="color:var(--teal);">${destSeatId}</span>
+        </div>
+      </div>
+    `;
+  });
+  
+  html += `</div>`;
+  previewContent.innerHTML = html;
+}
+
+// ============================================================
+// EXECUTE SWAP
+// ============================================================
+function executeSwap() {
+  const partType = document.getElementById('swapPartType').value;
+  const sourceSeatId = document.getElementById('swapSourceSeat').value;
+  const destSeatId = document.getElementById('swapDestSeat').value;
+  
+  if (!sourceSeatId || !destSeatId) {
+    showToast('❌ Please select both source and destination seats');
+    return;
+  }
+  
+  if (sourceSeatId === destSeatId) {
+    showToast('❌ Source and destination seats cannot be the same');
+    return;
+  }
+  
+  const src = data.find(d => d.seating_id === sourceSeatId);
+  const dst = data.find(d => d.seating_id === destSeatId);
+  
+  if (!src || !dst) {
+    showToast('❌ Seat not found');
+    return;
+  }
+  
+  const swapInfo = SWAP_FIELDS[partType];
+  const fields = swapInfo.fields;
+  const label = swapInfo.label;
+  
+  let confirmHtml = `
+    <div class="row"><strong>Part Type:</strong> <span style="color:var(--swap-color);">${label}</span></div>
+    <div class="row"><strong>From (Source):</strong> <span class="from">${sourceSeatId} - ${src.employee_name || 'Vacant'}</span></div>
+    <div class="row"><strong>To (Destination):</strong> <span class="to">${destSeatId} - ${dst.employee_name || 'Vacant'}</span></div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);"></div>
+  `;
+  
+  fields.forEach(field => {
+    const fieldLabel = FIELDS.find(f => f.key === field)?.label || field;
+    const srcVal = src[field] || '—';
+    const dstVal = dst[field] || '—';
+    confirmHtml += `
+      <div class="row">
+        <span style="color:var(--muted);font-size:12px;">${fieldLabel}:</span>
+        <span><span class="from">${srcVal}</span> <span class="arrow-icon">↔</span> <span class="to">${dstVal}</span></span>
+      </div>
+    `;
+  });
+  
+  document.getElementById('swapConfirmDetails').innerHTML = confirmHtml;
+  swapPending = { partType, sourceSeatId, destSeatId, fields };
+  document.getElementById('swapConfirmModal').classList.add('active');
+}
+
+function confirmSwap() {
+  if (!swapPending) {
+    showToast('❌ No swap pending');
+    return;
+  }
+  
+  const { partType, sourceSeatId, destSeatId, fields } = swapPending;
+  const src = data.find(d => d.seating_id === sourceSeatId);
+  const dst = data.find(d => d.seating_id === destSeatId);
+  
+  if (!src || !dst) {
+    showToast('❌ Seat not found');
+    document.getElementById('swapConfirmModal').classList.remove('active');
+    swapPending = null;
+    return;
+  }
+  
+  if (src.seating_availability !== 'Occupied' && dst.seating_availability !== 'Occupied') {
+    if (!confirm('⚠️ Both seats are vacant. Do you want to swap empty data anyway?')) {
+      return;
+    }
+  }
+  
+  const srcValues = {};
+  const dstValues = {};
+  fields.forEach(field => {
+    srcValues[field] = src[field];
+    dstValues[field] = dst[field];
+  });
+  
+  fields.forEach(field => {
+    src[field] = dstValues[field];
+    dst[field] = srcValues[field];
+  });
+  
+  document.getElementById('swapConfirmModal').classList.remove('active');
+  const partLabel = SWAP_FIELDS[partType]?.label || 'Part';
+  showToast(`✅ ${partLabel} swapped successfully between ${sourceSeatId} and ${destSeatId}!`);
+  swapPending = null;
+  
+  persist();
+  renderStats();
+  populateSwapSeats();
+  updateSwapPreview();
+}
+
+// ============================================================
+// RENTAL TABLE RENDERING
+// ============================================================
+function renderRentalItems() {
+  const container = document.getElementById('rentalList');
+  if (!container) return;
+  
+  let totalCpu = 0, totalMonitor = 0, totalKeyboard = 0, totalMouse = 0;
+  rentalItems.forEach(item => {
+    totalCpu += parseInt(item.cpu) || 0;
+    totalMonitor += parseInt(item.monitor) || 0;
+    totalKeyboard += parseInt(item.keyboard) || 0;
+    totalMouse += parseInt(item.mouse) || 0;
+  });
+
+  if (rentalItems.length === 0) {
+    container.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:20px;text-align:center;">No rental items available. Add a new item below.</div>`;
+    return;
+  }
+
+  const groups = {};
+  rentalItems.forEach(item => {
+    const batch = item.batchNo || 'NO BATCH';
+    if (!groups[batch]) groups[batch] = [];
+    groups[batch].push(item);
+  });
+
+  let html = `
+    <table class="rental-table">
+      <thead>
+        <tr>
+          <th>Batch No</th>
+          <th>S.No</th>
+          <th>CPU Total</th>
+          <th>Monitor</th>
+          <th>Monitor Inch</th>
+          <th>Keyboard</th>
+          <th>Mouse</th>
+          <th>CPU Spec</th>
+          <th>Old PCs</th>
+          <th>Service Tag</th>
+          <th>Request Date</th>
+          <th>Received Date</th>
+          <th>Problem Date</th>
+          <th>Problem Items</th>
+          <th>Replacement Date</th>
+          <th>Return Date</th>
+          <th>Ideal Days</th>
+          <th>Remarks</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  let index = 0;
+  Object.keys(groups).sort().forEach(batch => {
+    html += `<tr class="batch-group-row"><td colspan="19">🏷️ ${batch}</td></tr>`;
+    
+    groups[batch].forEach(item => {
+      index++;
+      html += `
+        <tr>
+          <td style="color: var(--rental-color); font-weight: 700;">${item.batchNo || '—'}</td>
+          <td>${index}</td>
+          <td>${item.cpu || 0}</td>
+          <td>${item.monitor || 0}</td>
+          <td>${item.monitorInch || '—'}</td>
+          <td>${item.keyboard || 0}</td>
+          <td>${item.mouse || 0}</td>
+          <td style="text-align:left;">${item.cpuSpec || '—'}</td>
+          <td>${item.oldPcs || '—'}</td>
+          <td>${item.serviceTag || '—'}</td>
+          <td>${item.requestDate || '—'}</td>
+          <td>${item.receivedDate || '—'}</td>
+          <td>${item.problemDate || '—'}</td>
+          <td>${item.problemItems || '—'}</td>
+          <td>${item.replacementDate || '—'}</td>
+          <td>${item.returnDate || '—'}</td>
+          <td>${item.idealDays || 0}</td>
+          <td style="text-align:left;">${item.remarks || '—'}</td>
+          <td>
+            <div class="actions-cell">
+              <button class="edit-btn" onclick="editRentalItem(${index - 1})" title="Edit">✏️</button>
+              <button class="delete-btn" onclick="openRentalDeleteModal(${index - 1})" title="Delete">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+  });
+
+  html += `
+      </tbody>
+      <tfoot>
+        <tr class="total-row">
+          <td colspan="2">TOTAL</td>
+          <td>${totalCpu}</td>
+          <td>${totalMonitor}</td>
+          <td>—</td>
+          <td>${totalKeyboard}</td>
+          <td>${totalMouse}</td>
+          <td colspan="11"></td>
+        </tr>
+      </tfoot>
+    </table>
+  `;
+  
+  container.innerHTML = html;
+}
+
+// ============================================================
+// RENTAL CRUD OPERATIONS
+// ============================================================
+function addRentalItem() {
+  const batchNo = document.getElementById('rentalBatchNo').value.trim();
+  const cpu = document.getElementById('rentalCpu').value.trim();
+  const monitor = document.getElementById('rentalMonitor').value.trim();
+  const monitorInch = document.getElementById('rentalMonitorInch').value.trim();
+  const keyboard = document.getElementById('rentalKeyboard').value.trim();
+  const mouse = document.getElementById('rentalMouse').value.trim();
+  const cpuSpec = document.getElementById('rentalCpuSpec').value.trim();
+  const oldPcs = document.getElementById('rentalOldPcs').value.trim();
+  const serviceTag = document.getElementById('rentalServiceTag').value.trim();
+  const requestDate = document.getElementById('rentalRequestDate').value.trim();
+  const receivedDate = document.getElementById('rentalReceivedDate').value.trim();
+  const problemDate = document.getElementById('rentalProblemDate').value.trim();
+  const problemItems = document.getElementById('rentalProblemItems').value.trim();
+  const replacementDate = document.getElementById('rentalReplacementDate').value.trim();
+  const returnDate = document.getElementById('rentalReturnDate').value.trim();
+  const idealDays = document.getElementById('rentalIdealDays').value || '0';
+  const remarks = document.getElementById('rentalRemarks').value.trim();
+
+  if (!batchNo) {
+    showToast('❌ Please enter a Batch No!');
+    document.getElementById('rentalBatchNo').focus();
+    return;
+  }
+  if (!cpuSpec && !serviceTag) {
+    showToast('⚠️ Please enter at least CPU Spec or Service Tag');
+    return;
+  }
+
+  const newItem = {
+    batchNo: batchNo,
+    cpu: cpu,
+    monitor: monitor,
+    monitorInch: monitorInch,
+    keyboard: keyboard,
+    mouse: mouse,
+    cpuSpec: cpuSpec,
+    oldPcs: oldPcs,
+    serviceTag: serviceTag,
+    requestDate: requestDate,
+    receivedDate: receivedDate,
+    problemDate: problemDate,
+    problemItems: problemItems,
+    replacementDate: replacementDate,
+    returnDate: returnDate,
+    idealDays: idealDays,
+    remarks: remarks
+  };
+
+  if (editingRentalIndex > -1) {
+    rentalItems[editingRentalIndex] = newItem;
+    editingRentalIndex = -1;
+    document.getElementById('formTitle').textContent = 'Add New Rental Item';
+    document.getElementById('formTitle').classList.remove('form-title-edit');
+    document.getElementById('addRentalItem').innerHTML = '+ Add Rental Item';
+    document.getElementById('cancelEditBtn').style.display = 'none';
+    document.querySelector('.add-rental-form').classList.remove('rental-edit-mode');
+    showToast('✅ Rental item updated successfully!');
+  } else {
+    rentalItems.push(newItem);
+    showToast('✅ Rental item added successfully!');
+  }
+
+  clearRentalForm();
+  persist();
+  renderStats();
+}
+
+function clearRentalForm() {
+  document.getElementById('rentalBatchNo').value = '';
+  document.getElementById('rentalCpu').value = '';
+  document.getElementById('rentalMonitor').value = '';
+  document.getElementById('rentalMonitorInch').value = '';
+  document.getElementById('rentalKeyboard').value = '';
+  document.getElementById('rentalMouse').value = '';
+  document.getElementById('rentalCpuSpec').value = '';
+  document.getElementById('rentalOldPcs').value = '';
+  document.getElementById('rentalServiceTag').value = '';
+  document.getElementById('rentalRequestDate').value = '';
+  document.getElementById('rentalReceivedDate').value = '';
+  document.getElementById('rentalProblemDate').value = '';
+  document.getElementById('rentalProblemItems').value = '';
+  document.getElementById('rentalReplacementDate').value = '';
+  document.getElementById('rentalReturnDate').value = '';
+  document.getElementById('rentalIdealDays').value = '';
+  document.getElementById('rentalRemarks').value = '';
+}
+
+function editRentalItem(index) {
+  if (editingRentalIndex > -1 && editingRentalIndex !== index) {
+    if (!confirm('You have unsaved changes. Discard them and edit this item?')) {
+      return;
+    }
+    cancelEdit();
+  }
+  
+  editingRentalIndex = index;
+  const item = rentalItems[index];
+
+  document.getElementById('rentalBatchNo').value = item.batchNo || '';
+  document.getElementById('rentalCpu').value = item.cpu || '';
+  document.getElementById('rentalMonitor').value = item.monitor || '';
+  document.getElementById('rentalMonitorInch').value = item.monitorInch || '';
+  document.getElementById('rentalKeyboard').value = item.keyboard || '';
+  document.getElementById('rentalMouse').value = item.mouse || '';
+  document.getElementById('rentalCpuSpec').value = item.cpuSpec || '';
+  document.getElementById('rentalOldPcs').value = item.oldPcs || '';
+  document.getElementById('rentalServiceTag').value = item.serviceTag || '';
+  document.getElementById('rentalRequestDate').value = item.requestDate || '';
+  document.getElementById('rentalReceivedDate').value = item.receivedDate || '';
+  document.getElementById('rentalProblemDate').value = item.problemDate || '';
+  document.getElementById('rentalProblemItems').value = item.problemItems || '';
+  document.getElementById('rentalReplacementDate').value = item.replacementDate || '';
+  document.getElementById('rentalReturnDate').value = item.returnDate || '';
+  document.getElementById('rentalIdealDays').value = item.idealDays || '';
+  document.getElementById('rentalRemarks').value = item.remarks || '';
+
+  document.getElementById('formTitle').textContent = '✏️ Edit Rental Item';
+  document.getElementById('formTitle').classList.add('form-title-edit');
+  document.getElementById('addRentalItem').innerHTML = '💾 Update Rental Item';
+  document.getElementById('cancelEditBtn').style.display = 'inline-flex';
+  document.querySelector('.add-rental-form').classList.add('rental-edit-mode');
+
+  calculateIdealDays();
+  document.querySelector('.add-rental-form').scrollIntoView({ behavior: 'smooth' });
+}
+
+function cancelEdit() {
+  editingRentalIndex = -1;
+  clearRentalForm();
+  document.getElementById('formTitle').textContent = 'Add New Rental Item';
+  document.getElementById('formTitle').classList.remove('form-title-edit');
+  document.getElementById('addRentalItem').innerHTML = '+ Add Rental Item';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  document.querySelector('.add-rental-form').classList.remove('rental-edit-mode');
+}
+
+function removeRentalItem(index) {
+  if (!confirm(`Remove this rental item?`)) return;
+  rentalItems.splice(index, 1);
+  if (editingRentalIndex === index) cancelEdit();
+  persist();
+  renderStats();
+  showToast('🗑️ Rental item removed');
+}
+
+// ============================================================
+// RENTAL DELETE MODAL FUNCTIONS
+// ============================================================
+function openRentalDeleteModal(index) {
+  rentalToDeleteIndex = index;
+  const item = rentalItems[index];
+  if (!item) return;
+  
+  document.getElementById('rentalDeleteBatch').textContent = item.batchNo || '—';
+  document.getElementById('rentalDeleteCpuSpec').textContent = item.cpuSpec || '—';
+  document.getElementById('rentalDeleteServiceTag').textContent = item.serviceTag || '—';
+  
+  document.getElementById('rentalDeleteModal').classList.add('active');
+}
+
+function closeRentalDeleteModal() {
+  document.getElementById('rentalDeleteModal').classList.remove('active');
+  rentalToDeleteIndex = -1;
+}
+
+async function confirmRentalDelete() {
+  if (rentalToDeleteIndex < 0 || rentalToDeleteIndex >= rentalItems.length) {
+    showToast('❌ Invalid rental item');
+    closeRentalDeleteModal();
+    return;
+  }
+  
+  const item = rentalItems[rentalToDeleteIndex];
+  const batchNo = item.batchNo || 'Unknown';
+  
+  rentalItems.splice(rentalToDeleteIndex, 1);
+  
+  if (editingRentalIndex === rentalToDeleteIndex) {
+    cancelEdit();
+  } else if (editingRentalIndex > rentalToDeleteIndex) {
+    editingRentalIndex--;
+  }
+  
+  closeRentalDeleteModal();
+  await persist();
+  renderStats();
+  showToast(`🗑️ Rental item from batch "${batchNo}" deleted successfully!`);
+}
+
+// ============================================================
+// EXTRA ASSETS LOGIC
+// ============================================================
+function toggleExtraAssets() {
+  const panel = document.getElementById('extraAssetsPanel');
+  const mainContent = document.getElementById('mainContent');
+  const isOpen = panel.classList.toggle('open');
+  
+  if (isOpen) {
+    mainContent.classList.add('hidden');
+    renderExtraAssets();
+    const rentalPanel = document.getElementById('rentalPanel');
+    if (rentalPanel.classList.contains('open')) {
+      rentalPanel.classList.remove('open');
+    }
+    const swapPanel = document.getElementById('swapPanel');
+    if (swapPanel.classList.contains('open')) {
+      swapPanel.classList.remove('open');
+    }
+  } else {
+    mainContent.classList.remove('hidden');
+  }
+}
+
+function closeExtraAssets() {
+  document.getElementById('extraAssetsPanel').classList.remove('open');
+  document.getElementById('mainContent').classList.remove('hidden');
+}
+
+function toggleRentalPanel() {
+  const panel = document.getElementById('rentalPanel');
+  const mainContent = document.getElementById('mainContent');
+  const isOpen = panel.classList.toggle('open');
+  
+  if (isOpen) {
+    mainContent.classList.add('hidden');
+    renderRentalItems();
+    const extraPanel = document.getElementById('extraAssetsPanel');
+    if (extraPanel.classList.contains('open')) {
+      extraPanel.classList.remove('open');
+    }
+    const swapPanel = document.getElementById('swapPanel');
+    if (swapPanel.classList.contains('open')) {
+      swapPanel.classList.remove('open');
+    }
+  } else {
+    mainContent.classList.remove('hidden');
+  }
+}
+
+function closeRentalPanel() {
+  document.getElementById('rentalPanel').classList.remove('open');
+  document.getElementById('mainContent').classList.remove('hidden');
+}
+
+function toggleSwapPanel() {
+  const panel = document.getElementById('swapPanel');
+  const mainContent = document.getElementById('mainContent');
+  const isOpen = panel.classList.toggle('open');
+  
+  if (isOpen) {
+    mainContent.classList.add('hidden');
+    populateSwapSeats();
+    updateSwapPreview();
+    const extraPanel = document.getElementById('extraAssetsPanel');
+    if (extraPanel.classList.contains('open')) {
+      extraPanel.classList.remove('open');
+    }
+    const rentalPanel = document.getElementById('rentalPanel');
+    if (rentalPanel.classList.contains('open')) {
+      rentalPanel.classList.remove('open');
+    }
+  } else {
+    mainContent.classList.remove('hidden');
+  }
+}
+
+function closeSwapPanel() {
+  document.getElementById('swapPanel').classList.remove('open');
+  document.getElementById('mainContent').classList.remove('hidden');
+}
+
+function renderDashboard(filterText, scrollToSeat){
+  renderSeatList(filterText, scrollToSeat);
+  if (currentSeat && detailEl.classList.contains('active')) {
+  } else {
+    detailEl.innerHTML = `<div class="empty-state">💺 Select a seat from the left panel to view details</div>`;
+    detailEl.classList.remove('active');
+    rowGroupsEl.classList.add('hidden');
+  }
+}
+
+// ============================================================
+// EXTRA ASSETS RENDER WITH EDIT/DELETE BUTTONS
+// ============================================================
+function renderExtraAssets() {
+  const container = document.getElementById('extraAssetsList');
+  let html = '';
+  
+  const categories = ['cpu', 'monitor', 'keyboard', 'mouse'];
+  const categoryIcons = {
+    cpu: '🖥️',
+    monitor: '🖥️',
+    keyboard: '⌨️',
+    mouse: '🖱️'
+  };
+  
+  categories.forEach(category => {
+    const items = extraAssets[category] || [];
+    
+    const brandMap = {};
+    items.forEach((item, idx) => {
+      if (brandMap[item.brand]) {
+        brandMap[item.brand].indices.push(idx);
+        brandMap[item.brand].quantity += item.quantity;
+      } else {
+        brandMap[item.brand] = {
+          indices: [idx],
+          quantity: item.quantity,
+          brand: item.brand
+        };
+      }
+    });
+    
+    const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+    
+    html += `<div class="asset-category">
+      <div class="cat-header">
+        <h4>${categoryIcons[category] || ''} ${ASSET_LABELS[category]}</h4>
+        <span class="count">${totalItems}</span>
+      </div>`;
+    
+    if (items.length === 0) {
+      html += `<div style="color:var(--muted);font-size:12px;padding:6px 0;text-align:center;">No items</div>`;
+    } else {
+      Object.keys(brandMap).sort().forEach(brand => {
+        const data = brandMap[brand];
+        html += `<div class="asset-item">
+          <div class="item-detail">
+            ${brand} <span class="spec">× ${data.quantity}</span>
+          </div>
+          <div style="display:flex;gap:4px;">
+            <button class="remove-btn" onclick="openExtraAssetEditModal('${category}', '${brand}')" title="Edit ${brand}" style="font-size:14px;background:none;border:none;color:var(--teal);cursor:pointer;">✏️</button>
+            <button class="remove-btn" onclick="openExtraAssetDeleteModal('${category}', '${brand}')" title="Delete ${brand}" style="font-size:14px;background:none;border:none;color:var(--danger);cursor:pointer;">✕</button>
+          </div>
+        </div>`;
+      });
+    }
+    
+    html += `</div>`;
+  });
+  
+  container.innerHTML = html;
+  
+  let total = 0;
+  Object.values(extraAssets).forEach(arr => {
+    arr.forEach(item => total += item.quantity);
+  });
+  safeSetText('statExtraAssets', total);
+}
+
+// ============================================================
+// EXTRA ASSETS CRUD OPERATIONS
+// ============================================================
+function addExtraAsset() {
+  const type = document.getElementById('assetType').value;
+  const brand = document.getElementById('assetBrand').value.trim();
+  const quantity = parseInt(document.getElementById('assetQuantity').value) || 1;
+  
+  if (!brand) {
+    showToast('Please select a brand');
+    return;
+  }
+  if (quantity < 1) {
+    showToast('Quantity must be at least 1');
+    return;
+  }
+  
+  if (!extraAssets[type]) {
+    extraAssets[type] = [];
+  }
+  
+  const existingItem = extraAssets[type].find(item => item.brand === brand);
+  if (existingItem) {
+    existingItem.quantity += quantity;
+  } else {
+    extraAssets[type].push({ brand: brand, quantity: quantity });
+  }
+  
+  document.getElementById('assetQuantity').value = 1;
+  persist();
+  renderExtraAssets();
+  renderStats();
+  showToast(`✅ Added ${quantity} × ${brand} ${ASSET_LABELS[type]}`);
+}
+
+function removeExtraAsset(category, brand) {
+  if (!confirm(`Remove all ${brand} items from ${ASSET_LABELS[category]}?`)) return;
+  if (extraAssets[category]) {
+    extraAssets[category] = extraAssets[category].filter(item => item.brand !== brand);
+    persist();
+    renderExtraAssets();
+    renderStats();
+    showToast(`Removed all ${brand} items`);
+  }
+}
+
+// ============================================================
+// EXTRA ASSET EDIT MODAL FUNCTIONS
+// ============================================================
+function openExtraAssetEditModal(category, brand) {
+  const items = extraAssets[category] || [];
+  const index = items.findIndex(item => item.brand === brand);
+  if (index === -1) {
+    showToast('❌ Asset not found');
+    return;
+  }
+  
+  editingExtraAsset = { category, brand, index };
+  const item = items[index];
+  
+  document.getElementById('editAssetType').value = category;
+  document.getElementById('editAssetBrand').value = item.brand || '';
+  document.getElementById('editAssetQuantity').value = item.quantity || 1;
+  document.getElementById('extraAssetEditTitle').textContent = `✏️ Edit ${ASSET_LABELS[category]}`;
+  
+  document.getElementById('extraAssetEditModal').classList.add('active');
+}
+
+function closeExtraAssetEditModal() {
+  document.getElementById('extraAssetEditModal').classList.remove('active');
+  editingExtraAsset = null;
+}
+
+async function saveExtraAssetEdit() {
+  if (!editingExtraAsset) {
+    showToast('❌ No asset selected for editing');
+    return;
+  }
+  
+  const { category, brand: oldBrand, index } = editingExtraAsset;
+  const newBrand = document.getElementById('editAssetBrand').value.trim();
+  const newQuantity = parseInt(document.getElementById('editAssetQuantity').value) || 1;
+  
+  if (!newBrand) {
+    showToast('❌ Please enter a brand name');
+    return;
+  }
+  if (newQuantity < 1) {
+    showToast('❌ Quantity must be at least 1');
+    return;
+  }
+  
+  const items = extraAssets[category] || [];
+  
+  if (newBrand !== oldBrand) {
+    const existingIndex = items.findIndex(item => item.brand === newBrand);
+    if (existingIndex !== -1 && existingIndex !== index) {
+      items[existingIndex].quantity += newQuantity;
+      items.splice(index, 1);
+      showToast(`✅ Merged ${newBrand} (added ${newQuantity} units)`);
+    } else {
+      items[index].brand = newBrand;
+      items[index].quantity = newQuantity;
+      showToast(`✅ Updated ${newBrand} to ${newQuantity} units`);
+    }
+  } else {
+    items[index].quantity = newQuantity;
+    showToast(`✅ Updated ${newBrand} to ${newQuantity} units`);
+  }
+  
+  closeExtraAssetEditModal();
+  await persist();
+  renderExtraAssets();
+  renderStats();
+}
+
+// ============================================================
+// EXTRA ASSET DELETE MODAL FUNCTIONS
+// ============================================================
+function openExtraAssetDeleteModal(category, brand) {
+  extraAssetToDelete = { category, brand };
+  const items = extraAssets[category] || [];
+  const item = items.find(i => i.brand === brand);
+  
+  if (!item) {
+    showToast('❌ Asset not found');
+    return;
+  }
+  
+  document.getElementById('extraAssetDeleteType').textContent = ASSET_LABELS[category] || category;
+  document.getElementById('extraAssetDeleteBrand').textContent = brand;
+  document.getElementById('extraAssetDeleteQty').textContent = item.quantity || 0;
+  
+  document.getElementById('extraAssetDeleteModal').classList.add('active');
+}
+
+function closeExtraAssetDeleteModal() {
+  document.getElementById('extraAssetDeleteModal').classList.remove('active');
+  extraAssetToDelete = null;
+}
+
+async function confirmExtraAssetDelete() {
+  if (!extraAssetToDelete) {
+    showToast('❌ No asset selected for deletion');
+    return;
+  }
+  
+  const { category, brand } = extraAssetToDelete;
+  const items = extraAssets[category] || [];
+  const index = items.findIndex(item => item.brand === brand);
+  
+  if (index === -1) {
+    showToast('❌ Asset not found');
+    closeExtraAssetDeleteModal();
+    return;
+  }
+  
+  items.splice(index, 1);
+  
+  closeExtraAssetDeleteModal();
+  await persist();
+  renderExtraAssets();
+  renderStats();
+  showToast(`🗑️ Removed ${brand} from ${ASSET_LABELS[category]}`);
+}
+
+// ============================================================
+// DETAIL VIEW FUNCTIONS
+// ============================================================
+function openDetail(seatingId){
+  lastEditedSeat = seatingId;
+  currentSeat = seatingId;
+  const record = data.find(d=>d.seating_id===seatingId);
+  if(!record) return;
+
+  renderSeatList(searchInput.value, seatingId);
+  
+  const listItems = seatListEl.querySelectorAll('.seat-list-item');
+  listItems.forEach(item => {
+    if (item.dataset.seatId === seatingId) {
+      item.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  });
+
+  rowGroupsEl.classList.add('hidden');
+  detailEl.classList.remove('active');
+  detailEl.innerHTML = '';
+
+  let sectionsHtml = '';
+  SECTIONS.forEach(sec=>{
+    const fields = FIELDS.filter(f=>f.section===sec && f.key!=='seating_id');
+    if(fields.length===0) return;
+    sectionsHtml += `<div class="section"><h3>${sec}</h3><div class="field-grid">`;
+    fields.forEach(f=>{
+      const val = record[f.key] ?? '';
+      if(f.type==='select'){
+        sectionsHtml += `<div class="field">
+          <label>${f.label}</label>
+          <select data-key="${f.key}">
+            <option value="">—</option>
+            ${f.options.map(o=>`<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('')}
+          </select>
+        </div>`;
+      } else {
+        sectionsHtml += `<div class="field">
+          <label>${f.label}</label>
+          <input type="text" data-key="${f.key}" value="${(val+'').replace(/"/g,'&quot;')}">
+        </div>`;
+      }
+    });
+    sectionsHtml += `</div></div>`;
+  });
+
+  const isOccupied = record.seating_availability === 'Occupied';
+
+  detailEl.innerHTML = `
+    <div class="back-link" id="backBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back to dashboard
+    </div>
+    <div class="detail-head">
+      <div>
+        <div class="tag">💺 Seat ${record.seating_id} &middot; SI No. ${record.si_no}</div>
+        <h2>${record.employee_name || 'Vacant seat'}</h2>
+      </div>
+      <div class="detail-actions">
+        ${isOccupied ? `<button class="btn success" id="moveBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M8 3v3m0 0H5m3 0h4M16 3v3m0 0h-3m3 0h4M3 11v10h18V11M3 11h18M3 11l2-2m16 2l-2-2"/>
+          </svg>
+          Move User
+        </button>` : ''}
+        <button class="btn danger" id="vacateBtn">Vacate Seat</button>
+        <button class="btn danger" id="deleteBtn" style="border-color:var(--danger);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+            <path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+          </svg>
+          Delete Seat
+        </button>
+      </div>
+    </div>
+    <div class="detail-wrapper">
+      ${sectionsHtml}
+    </div>
+  `;
+
+  const existingBtn = document.getElementById('fixedSaveBtn');
+  if (existingBtn) existingBtn.remove();
+
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'fixed-save-btn';
+  saveBtn.id = 'fixedSaveBtn';
+  saveBtn.innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+      <polyline points="17 21 17 13 7 13 7 21"/>
+      <polyline points="7 3 7 8 15 8"/>
+    </svg>
+    Save Changes
+  `;
+  saveBtn.style.cssText = `
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 100;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.03em;
+    padding: 14px 28px;
+    border-radius: 12px;
+    border: none;
+    background: var(--amber);
+    color: #1a1305;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: all .2s;
+    text-transform: uppercase;
+    font-weight: 600;
+    box-shadow: 0 8px 32px rgba(227, 165, 66, 0.3);
+  `;
+  saveBtn.addEventListener('mouseenter', function() {
+    this.style.background = '#f0b158';
+    this.style.transform = 'translateY(-2px)';
+    this.style.boxShadow = '0 12px 40px rgba(227, 165, 66, 0.4)';
+  });
+  saveBtn.addEventListener('mouseleave', function() {
+    this.style.background = 'var(--amber)';
+    this.style.transform = 'translateY(0)';
+    this.style.boxShadow = '0 8px 32px rgba(227, 165, 66, 0.3)';
+  });
+  saveBtn.addEventListener('click', saveDetail);
+  document.body.appendChild(saveBtn);
+
+  document.getElementById('backBtn').addEventListener('click', closeDetail);
+  document.getElementById('vacateBtn').addEventListener('click', vacateDetail);
+  document.getElementById('deleteBtn').addEventListener('click', function() {
+    openDeleteModal(seatingId);
+  });
+  if (isOccupied) {
+    document.getElementById('moveBtn').addEventListener('click', () => openMoveModal(seatingId));
+  }
+  
+  detailEl.classList.add('active');
+}
+
+function closeDetail() {
+  detailEl.classList.remove('active');
+  rowGroupsEl.classList.remove('hidden');
+  statsEls.forEach(el => el.classList.remove('hidden'));
+  
+  currentSeat = null;
+  
+  const fixedBtn = document.getElementById('fixedSaveBtn');
+  if (fixedBtn) fixedBtn.remove();
+  
+  detailEl.innerHTML = `<div class="empty-state">💺 Select a seat from the left panel to view details</div>`;
+  detailEl.classList.remove('active');
+  
+  renderSeatList(searchInput.value);
+}
+
+async function saveDetail() {
+  const record = data.find(d => d.seating_id === currentSeat);
+  if (!record) {
+    showToast('❌ Error: Seat not found');
+    return;
+  }
+  
+  detailEl.querySelectorAll('[data-key]').forEach(el => {
+    const key = el.getAttribute('data-key');
+    let val = el.value.trim();
+    record[key] = val === '' ? null : val;
+  });
+  
+  try {
+    await persist();
+    renderStats();
+    renderSeatList(searchInput.value);
+    showToast('✅ Seat ' + currentSeat + ' saved successfully!');
+    
+    const fixedBtn = document.getElementById('fixedSaveBtn');
+    if (fixedBtn) fixedBtn.remove();
+    
+    closeDetail();
+  } catch (error) {
+    console.error('Save error:', error);
+    showToast('❌ Error saving seat. Please try again.');
+  }
+}
+
+async function vacateDetail(){
+  if(!confirm('Clear employee and system details for seat ' + currentSeat + ' and mark it Vacant?')) return;
+  const record = data.find(d=>d.seating_id===currentSeat);
+  if(!record) return;
+  FIELDS.forEach(f=>{
+    if(f.key==='seating_id') return;
+    if(f.key==='seating_availability'){ record[f.key]='Vacant'; return; }
+    record[f.key] = null;
+  });
+  await persist();
+  renderStats();
+  showToast('🪑 Seat ' + currentSeat + ' vacated');
+  
+  const fixedBtn = document.getElementById('fixedSaveBtn');
+  if (fixedBtn) fixedBtn.remove();
+  
+  closeDetail();
+}
+
+// ============================================================
+// MODAL FUNCTIONS
+// ============================================================
+function openDeleteModal(seatId) {
+  seatToDelete = seatId;
+  document.getElementById('deleteSeatIdDisplay').textContent = seatId;
+  document.getElementById('deleteConfirmModal').classList.add('active');
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteConfirmModal').classList.remove('active');
+  seatToDelete = null;
+}
+
+async function confirmDeleteSeat() {
+  if (!seatToDelete) return;
+  
+  const record = data.find(d => d.seating_id === seatToDelete);
+  if (!record) {
+    showToast('Error: Seat not found');
+    closeDeleteModal();
+    return;
+  }
+  
+  const index = data.indexOf(record);
+  if (index > -1) {
+    data.splice(index, 1);
+  }
+  
+  await persist();
+  renderStats();
+  renderSeatList(searchInput.value);
+  showToast('🗑️ Seat ' + seatToDelete + ' deleted successfully!');
+  
+  closeDeleteModal();
+  
+  if (currentSeat === seatToDelete) {
+    closeDetail();
+  }
+}
+
+function openAddSeatModal() {
+  console.log('Opening Add Seat Modal');
+  const modal = document.getElementById('addSeatModal');
+  const input = document.getElementById('newSeatId');
+  const error = document.getElementById('seatError');
+  
+  input.value = '';
+  error.classList.remove('show');
+  modal.classList.add('active');
+  
+  setTimeout(() => {
+    input.focus();
+  }, 100);
+}
+
+function closeAddSeatModal() {
+  document.getElementById('addSeatModal').classList.remove('active');
+  document.getElementById('seatError').classList.remove('show');
+}
+
+async function confirmAddSeat() {
+  const input = document.getElementById('newSeatId');
+  const error = document.getElementById('seatError');
+  const seatId = input.value.trim();
+  
+  if (!seatId) {
+    error.textContent = 'Please enter a seating ID.';
+    error.classList.add('show');
+    return;
+  }
+  
+  const trimmed = seatId.toUpperCase();
+  console.log('Creating seat:', trimmed);
+  
+  if (data.find(d => d.seating_id === trimmed)) {
+    error.textContent = '❌ Seating ID "' + trimmed + '" already exists. Please use a different ID.';
+    error.classList.add('show');
+    return;
+  }
+  
+  const maxSi = data.reduce((max, d) => Math.max(max, d.si_no || 0), 0);
+  const newSi = maxSi + 1;
+  
+  const newSeat = {
+    si_no: newSi,
+    seating_id: trimmed,
+    seating_availability: 'Occupied'
+  };
+  
+  FIELDS.forEach(f => {
+    if (!(f.key in newSeat)) {
+      newSeat[f.key] = null;
+    }
+  });
+  
+  data.push(newSeat);
+  console.log('New seat added:', newSeat);
+  
+  closeAddSeatModal();
+  
+  await persist();
+  renderStats();
+  renderSeatList(searchInput.value);
+  showToast('✅ New seat ' + trimmed + ' created successfully!');
+  openDetail(trimmed);
+}
+
+function updateBrandOptions() {
+  const type = document.getElementById('assetType').value;
+  const brandSelect = document.getElementById('assetBrand');
+  const brands = BRAND_OPTIONS[type] || [];
+  
+  brandSelect.innerHTML = '<option value="">Select Brand...</option>';
+  brands.forEach(brand => {
+    const option = document.createElement('option');
+    option.value = brand;
+    option.textContent = brand;
+    brandSelect.appendChild(option);
+  });
+}
+
+function openMoveModal(sourceSeatId) {
+  moveSourceSeat = sourceSeatId;
+  const sourceRecord = data.find(d => d.seating_id === sourceSeatId);
+  if (!sourceRecord) return;
+
+  document.getElementById('sourceSeatDisplay').textContent = sourceSeatId;
+  document.getElementById('sourceEmployeeDisplay').textContent = 
+    sourceRecord.employee_name ? `${sourceRecord.employee_name} • ${sourceRecord.desktop_name || 'No desktop'}` : 'No employee assigned';
+
+  const select = document.getElementById('targetSeatSelect');
+  select.innerHTML = '<option value="">Select destination seat...</option>';
+  
+  const availableSeats = data
+    .filter(d => d.seating_id !== sourceSeatId)
+    .sort((a, b) => {
+      const aMatch = a.seating_id.match(/^([A-Z]+)(\d+)$/);
+      const bMatch = b.seating_id.match(/^([A-Z]+)(\d+)$/);
+      if (aMatch && bMatch) {
+        const letterCompare = aMatch[1].localeCompare(bMatch[1]);
+        if (letterCompare !== 0) return letterCompare;
+        return parseInt(aMatch[2]) - parseInt(bMatch[2]);
+      }
+      return a.seating_id.localeCompare(b.seating_id);
+    });
+  
+  availableSeats.forEach(seat => {
+    const option = document.createElement('option');
+    option.value = seat.seating_id;
+    const status = seat.seating_availability === 'Occupied' ? '🔴 Occupied' : '🟢 Vacant';
+    const name = seat.employee_name ? ` - ${seat.employee_name}` : '';
+    option.textContent = `${seat.seating_id} ${name} (${status})`;
+    option.dataset.status = seat.seating_availability;
+    select.appendChild(option);
+  });
+
+  document.getElementById('moveModal').classList.add('active');
+}
+
+function closeMoveModal() {
+  document.getElementById('moveModal').classList.remove('active');
+  moveSourceSeat = null;
+}
+
+async function confirmMove() {
+  const targetSeatId = document.getElementById('targetSeatSelect').value;
+  if (!targetSeatId) {
+    showToast('Please select a destination seat');
+    return;
+  }
+
+  const sourceRecord = data.find(d => d.seating_id === moveSourceSeat);
+  const targetRecord = data.find(d => d.seating_id === targetSeatId);
+  
+  if (!sourceRecord || !targetRecord) {
+    showToast('Error: Seat not found');
+    return;
+  }
+
+  const confirmMsg = `Move user "${sourceRecord.employee_name || 'Unnamed'}" from ${moveSourceSeat} to ${targetSeatId}?\n\nThis will overwrite any existing data at ${targetSeatId}.`;
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    const sourceData = {};
+    FIELDS.forEach(f => {
+      if (f.key !== 'seating_id' && f.key !== 'si_no') {
+        sourceData[f.key] = sourceRecord[f.key] || null;
+      }
+    });
+
+    FIELDS.forEach(f => {
+      if (f.key !== 'seating_id' && f.key !== 'si_no') {
+        targetRecord[f.key] = sourceData[f.key] || null;
+      }
+    });
+    targetRecord.seating_availability = 'Occupied';
+
+    FIELDS.forEach(f => {
+      if (f.key === 'seating_id') return;
+      if (f.key === 'seating_availability') { 
+        sourceRecord[f.key] = 'Vacant'; 
+        return; 
+      }
+      sourceRecord[f.key] = null;
+    });
+
+    await persist();
+    renderStats();
+    renderSeatList(searchInput.value);
+    showToast(`✅ User moved from ${moveSourceSeat} to ${targetSeatId} successfully!`);
+    closeMoveModal();
+    closeDetail();
+  } catch (error) {
+    console.error('Move error:', error);
+    showToast('Error moving user. Please try again.');
+  }
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+// ============================================================
+// EXPORT REPORT
+// ============================================================
+async function exportReport() {
+  try {
+    showToast('📊 Generating report...');
+    
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Asset Register';
+    workbook.created = new Date();
+
+    function formatSheet(sheet, minWidth = 12, maxWidth = 50) {
+      sheet.eachRow({ includeEmpty: false }, (row) => {
+        row.eachCell({ includeEmpty: true }, (cell) => {
+          cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+        });
+      });
+
+      sheet.columns.forEach((column) => {
+        let maxLength = 0;
+        column.eachCell({ includeEmpty: true }, (cell) => {
+          if (cell.value !== null && cell.value !== undefined) {
+            const length = cell.value.toString().length;
+            if (length > maxLength) maxLength = length;
+          }
+        });
+        
+        const colWidth = Math.max(minWidth, Math.min(maxLength + 2, maxWidth));
+        column.width = colWidth;
+      });
+    }
+
+    // Sheet 1: Asset Details
+    const ws1 = workbook.addWorksheet('Asset Details');
+    const columns = COLUMN_LABELS.map(label => ({
+      header: label,
+      key: label,
+      width: Math.min(Math.max(label.length + 8, 15), 45)
+    }));
+    ws1.columns = columns;
+    
+    data.slice().sort((a, b) => (a.si_no || 0) - (b.si_no || 0)).forEach(d => {
+      const row = {};
+      FIELDS.forEach(f => {
+        row[f.label] = d[f.key] ?? '';
+      });
+      ws1.addRow(row);
+    });
+    
+    const headerRow = ws1.getRow(1);
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: 'FF1A1305' }, size: 11 };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0D040' } };
+    });
+    headerRow.height = 28;
+    formatSheet(ws1, 15, 50);
+
+    // Sheet 2: Rental Systems
+    const ws2 = workbook.addWorksheet('Rental Systems');
+    
+    const rentalHeaders = ['S.No', 'Batch No', 'CPU Total', 'Total Monitor', 'Monitor Inch', 'Total Keyboard', 'Total Mouse', 'CPU Spec', 'Old PCs', 'Service Tag', 'Request Date', 'Received Date', 'Problem Date', 'Problem Items', 'Replacement Date', 'Return Date', 'Ideal of days not working', 'Remarks'];
+    ws2.addRow(rentalHeaders);
+    
+    const rentalHeaderRow = ws2.getRow(1);
+    rentalHeaderRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: 'FF1A1305' }, size: 11 };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0D040' } };
+    });
+    rentalHeaderRow.height = 28;
+    
+    let totalRentalCpu = 0, totalRentalMonitor = 0, totalRentalKeyboard = 0, totalRentalMouse = 0;
+    let globalIndex = 0;
+    
+    const groups = {};
+    rentalItems.forEach(item => {
+      const batch = item.batchNo || 'NO BATCH';
+      if (!groups[batch]) groups[batch] = [];
+      groups[batch].push(item);
+    });
+    
+    let currentRow = 2;
+    
+    Object.keys(groups).sort().forEach(batch => {
+      ws2.addRow(['', `🏷️ ${batch}`, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
+      const batchRow = ws2.getRow(currentRow);
+      batchRow.eachCell((cell) => {
+        cell.font = { bold: true, size: 12, color: { argb: 'FFF39C12' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF5C4010' } };
+      });
+      batchRow.height = 24;
+      currentRow++;
+      
+      groups[batch].forEach(item => {
+        globalIndex++;
+        totalRentalCpu += parseInt(item.cpu) || 0;
+        totalRentalMonitor += parseInt(item.monitor) || 0;
+        totalRentalKeyboard += parseInt(item.keyboard) || 0;
+        totalRentalMouse += parseInt(item.mouse) || 0;
+        
+        ws2.addRow([
+          globalIndex,
+          item.batchNo || '',
+          item.cpu || 0,
+          item.monitor || 0,
+          item.monitorInch || '',
+          item.keyboard || 0,
+          item.mouse || 0,
+          item.cpuSpec || '',
+          item.oldPcs || '',
+          item.serviceTag || '',
+          item.requestDate || '',
+          item.receivedDate || '',
+          item.problemDate || '',
+          item.problemItems || '',
+          item.replacementDate || '',
+          item.returnDate || '',
+          item.idealDays || 0,
+          item.remarks || ''
+        ]);
+        currentRow++;
+      });
+    });
+    
+    ws2.addRow(['TOTAL', '', totalRentalCpu, totalRentalMonitor, '', totalRentalKeyboard, totalRentalMouse, '', '', '', '', '', '', '', '', '', '', '']);
+    const totalRow = ws2.getRow(currentRow);
+    totalRow.eachCell((cell) => {
+      cell.font = { bold: true, size: 12, color: { argb: 'FF4FD1C5' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1C3A37' } };
+    });
+    totalRow.height = 26;
+
+    formatSheet(ws2, 12, 50);
+
+    // Sheet 3: Extra Assets
+    const ws3 = workbook.addWorksheet('Extra Assets');
+    
+    ws3.addRow(['EXTRA ASSETS (SERVER ROOM)']);
+    ws3.getCell('A1').font = { bold: true, size: 14, color: { argb: 'FF9B59B6' } };
+    ws3.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3D2A4A' } };
+    ws3.getRow(1).height = 30;
+    
+    ws3.addRow(['Category', 'Brand', 'Quantity']);
+    const extraHeaderRow = ws3.getRow(2);
+    extraHeaderRow.eachCell((cell) => {
+      cell.font = { bold: true, size: 12, color: { argb: 'FF1A1305' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE3A542' } };
+    });
+    
+    let extraRow = 3;
+    const extraCategories = ['cpu', 'monitor', 'keyboard', 'mouse'];
+    let totalExtra = 0;
+    
+    extraCategories.forEach(cat => {
+      const items = extraAssets[cat] || [];
+      let catTotal = 0;
+      
+      items.forEach(item => {
+        catTotal += item.quantity;
+        totalExtra += item.quantity;
+        ws3.addRow([ASSET_LABELS[cat] || cat, item.brand || '', item.quantity || 1]);
+        extraRow++;
+      });
+      
+      if (items.length > 0) {
+        ws3.addRow([`${ASSET_LABELS[cat] || cat} Total`, '', catTotal]);
+        const catTotalRow = ws3.getRow(extraRow);
+        catTotalRow.eachCell((cell) => {
+          cell.font = { bold: true, size: 11, color: { argb: 'FF9B59B6' } };
+        });
+        extraRow++;
+        ws3.addRow(['', '', '']);
+        extraRow++;
+      }
+    });
+    
+    ws3.addRow(['GRAND TOTAL', '', totalExtra]);
+    const grandTotalRow = ws3.getRow(extraRow);
+    grandTotalRow.eachCell((cell) => {
+      cell.font = { bold: true, size: 13, color: { argb: 'FF4FD1C5' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1C3A37' } };
+    });
+
+    formatSheet(ws3, 15, 40);
+
+    // Sheet 4: Summary
+    const ws4 = workbook.addWorksheet('Summary');
+    
+    let cpuOffice = 0, cpuRental = 0;
+    let monitorOffice = 0, monitorRental = 0;
+    let keyboardOffice = 0, keyboardRental = 0;
+    let mouseOffice = 0, mouseRental = 0;
+    let cpuTotal = 0, monitorTotal = 0, keyboardTotal = 0, mouseTotal = 0;
+    
+    data.forEach(d => {
+      if (d.ownership_cpu) {
+        cpuTotal++;
+        if (d.ownership_cpu === 'OFFICE') cpuOffice++;
+        else if (d.ownership_cpu === 'RENTAL') cpuRental++;
+      }
+      if (d.ownership_monitor1) {
+        monitorTotal++;
+        if (d.ownership_monitor1 === 'OFFICE') monitorOffice++;
+        else if (d.ownership_monitor1 === 'RENTAL') monitorRental++;
+      }
+      if (d.ownership_monitor2) {
+        monitorTotal++;
+        if (d.ownership_monitor2 === 'OFFICE') monitorOffice++;
+        else if (d.ownership_monitor2 === 'RENTAL') monitorRental++;
+      }
+      if (d.ownership_keyboard) {
+        keyboardTotal++;
+        if (d.ownership_keyboard === 'OFFICE') keyboardOffice++;
+        else if (d.ownership_keyboard === 'RENTAL') keyboardRental++;
+      }
+      if (d.ownership_mouse) {
+        mouseTotal++;
+        if (d.ownership_mouse === 'OFFICE') mouseOffice++;
+        else if (d.ownership_mouse === 'RENTAL') mouseRental++;
+      }
+    });
+    
+    const summaryData = [
+      ['ASSET REGISTER SUMMARY REPORT'],
+      [],
+      ['SEAT STATISTICS'],
+      ['Category', 'Count'],
+      ['Total Seats', data.length],
+      ['Occupied Seats', data.filter(d => d.seating_availability === 'Occupied').length],
+      ['Vacant Seats', data.filter(d => d.seating_availability === 'Vacant').length],
+      [],
+      ['USER SYSTEM DETAILS'],
+      ['Category', 'Office', 'Rental', 'Total'],
+      ['CPU Units', cpuOffice, cpuRental, cpuTotal],
+      ['Monitors', monitorOffice, monitorRental, monitorTotal],
+      ['Keyboards', keyboardOffice, keyboardRental, keyboardTotal],
+      ['Mice', mouseOffice, mouseRental, mouseTotal],
+      [],
+      ['Report Generated:', new Date().toLocaleString()]
+    ];
+    
+    summaryData.forEach(rowData => {
+      ws4.addRow(rowData);
+    });
+    
+    const titleCell = ws4.getCell('A1');
+    titleCell.font = { bold: true, size: 16, color: { argb: 'FF1A1305' } };
+    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0D040' } };
+    ws4.getRow(1).height = 35;
+    
+    const sectionHeaderRows = [3, 9];
+    
+    sectionHeaderRows.forEach(rowNum => {
+      const cell = ws4.getCell(`A${rowNum}`);
+      if (cell && cell.value) {
+        cell.font = { bold: true, size: 12, color: { argb: 'FF1A1305' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0D040' } };
+        ws4.getRow(rowNum).height = 28;
+      }
+    });
+
+    formatSheet(ws4, 15, 40);
+
+    const today = new Date().toISOString().slice(0, 10);
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    
+    if (typeof saveAs === 'function') {
+      saveAs(blob, `system_assets_report_${today}.xlsx`);
+    } else {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `system_assets_report_${today}.xlsx`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
+    
+    showToast('📊 Report exported successfully!');
+    
+  } catch (error) {
+    console.error('Export error:', error);
+    showToast('❌ Error generating report. Please try again.');
+  }
+}
+
+// ============================================================
+// KEYBOARD SHORTCUTS
+// ============================================================
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    searchInput.focus();
+  }
+  if (e.key === 'Escape') {
+    searchInput.blur();
+    if (document.getElementById('swapConfirmModal').classList.contains('active')) {
+      document.getElementById('swapConfirmModal').classList.remove('active');
+      swapPending = null;
+      return;
+    }
+    if (document.getElementById('rentalDeleteModal').classList.contains('active')) {
+      closeRentalDeleteModal();
+      return;
+    }
+    if (document.getElementById('extraAssetEditModal').classList.contains('active')) {
+      closeExtraAssetEditModal();
+      return;
+    }
+    if (document.getElementById('extraAssetDeleteModal').classList.contains('active')) {
+      closeExtraAssetDeleteModal();
+      return;
+    }
+    if (document.getElementById('deleteConfirmModal').classList.contains('active')) {
+      closeDeleteModal();
+      return;
+    }
+    if (document.getElementById('addSeatModal').classList.contains('active')) {
+      closeAddSeatModal();
+      return;
+    }
+    if (document.getElementById('extraAssetsPanel').classList.contains('open')) {
+      closeExtraAssets();
+      return;
+    }
+    if (document.getElementById('rentalPanel').classList.contains('open')) {
+      closeRentalPanel();
+      return;
+    }
+    if (document.getElementById('swapPanel').classList.contains('open')) {
+      closeSwapPanel();
+      return;
+    }
+    if (document.getElementById('moveModal').classList.contains('active')) {
+      closeMoveModal();
+      return;
+    }
+    if (detailEl.classList.contains('active')) {
+      const fixedBtn = document.getElementById('fixedSaveBtn');
+      if (fixedBtn) fixedBtn.remove();
+      closeDetail();
+    }
+  }
+  if (e.key === 'Enter') {
+    if (document.getElementById('addSeatModal').classList.contains('active')) {
+      e.preventDefault();
+      confirmAddSeat();
+    }
+    if (document.getElementById('deleteConfirmModal').classList.contains('active')) {
+      e.preventDefault();
+      confirmDeleteSeat();
+    }
+    if (document.getElementById('rentalDeleteModal').classList.contains('active')) {
+      e.preventDefault();
+      confirmRentalDelete();
+    }
+    if (document.getElementById('extraAssetEditModal').classList.contains('active')) {
+      e.preventDefault();
+      saveExtraAssetEdit();
+      return;
+    }
+    if (document.getElementById('extraAssetDeleteModal').classList.contains('active')) {
+      e.preventDefault();
+      confirmExtraAssetDelete();
+      return;
+    }
+    if (document.getElementById('swapConfirmModal').classList.contains('active')) {
+      e.preventDefault();
+      confirmSwap();
+      return;
+    }
+  }
+});
+
+// ============================================================
+// DOM CONTENT LOADED
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOM fully loaded');
+  
+  searchInput.addEventListener('input', function() {
+    renderSeatList(this.value);
+  });
+  document.getElementById('exportBtn').addEventListener('click', exportReport);
+  
+  // Swap Panel
+  document.getElementById('swapToggle').addEventListener('click', toggleSwapPanel);
+  document.getElementById('closeSwapPanel').addEventListener('click', closeSwapPanel);
+  document.getElementById('backFromSwap').addEventListener('click', closeSwapPanel);
+  document.getElementById('swapPartType').addEventListener('change', updateSwapPreview);
+  document.getElementById('swapSourceSeat').addEventListener('change', updateSwapPreview);
+  document.getElementById('swapDestSeat').addEventListener('change', updateSwapPreview);
+  document.getElementById('clearSwapBtn').addEventListener('click', function() {
+    document.getElementById('swapSourceSeat').value = '';
+    document.getElementById('swapDestSeat').value = '';
+    updateSwapPreview();
+  });
+  document.getElementById('executeSwapBtn').addEventListener('click', executeSwap);
+  
+  // Swap Confirm Modal
+  document.getElementById('cancelSwapConfirm').addEventListener('click', function() {
+    document.getElementById('swapConfirmModal').classList.remove('active');
+    swapPending = null;
+  });
+  document.getElementById('confirmSwapBtn').addEventListener('click', confirmSwap);
+  document.getElementById('swapConfirmModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      document.getElementById('swapConfirmModal').classList.remove('active');
+      swapPending = null;
+    }
+  });
+  
+  document.getElementById('cancelAddSeat').addEventListener('click', closeAddSeatModal);
+  document.getElementById('confirmAddSeat').addEventListener('click', confirmAddSeat);
+  document.getElementById('addSeatModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeAddSeatModal();
+    }
+  });
+  
+  document.getElementById('cancelDelete').addEventListener('click', closeDeleteModal);
+  document.getElementById('confirmDelete').addEventListener('click', confirmDeleteSeat);
+  document.getElementById('deleteConfirmModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeDeleteModal();
+    }
+  });
+
+  // Add New Seat button in System Details
+  const addNewSeatFromDetailsBtn = document.getElementById('addNewSeatFromDetailsBtn');
+  if (addNewSeatFromDetailsBtn) {
+    addNewSeatFromDetailsBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      console.log('New Seat button clicked from System Details');
+      openAddSeatModal();
+    });
+  }
+  
+  // Rental Delete Modal
+  document.getElementById('cancelRentalDelete').addEventListener('click', closeRentalDeleteModal);
+  document.getElementById('confirmRentalDelete').addEventListener('click', confirmRentalDelete);
+  document.getElementById('rentalDeleteModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeRentalDeleteModal();
+    }
+  });
+  
+  // Extra Asset Edit Modal
+  document.getElementById('saveExtraAssetEdit').addEventListener('click', saveExtraAssetEdit);
+  document.getElementById('extraAssetEditModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeExtraAssetEditModal();
+    }
+  });
+  
+  // Extra Asset Delete Modal
+  document.getElementById('cancelExtraAssetDelete').addEventListener('click', closeExtraAssetDeleteModal);
+  document.getElementById('confirmExtraAssetDelete').addEventListener('click', confirmExtraAssetDelete);
+  document.getElementById('extraAssetDeleteModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeExtraAssetDeleteModal();
+    }
+  });
+  
+  // Extra Assets
+  document.getElementById('extraAssetsToggle').addEventListener('click', toggleExtraAssets);
+  document.getElementById('closeExtraAssets').addEventListener('click', closeExtraAssets);
+  document.getElementById('backFromExtra').addEventListener('click', closeExtraAssets);
+  
+  // Rental Panel
+  document.getElementById('rentalToggle').addEventListener('click', toggleRentalPanel);
+  document.getElementById('closeRentalPanel').addEventListener('click', closeRentalPanel);
+  document.getElementById('backFromRental').addEventListener('click', closeRentalPanel);
+  
+  document.getElementById('assetType').addEventListener('change', updateBrandOptions);
+  updateBrandOptions();
+  
+  document.getElementById('addExtraAsset').addEventListener('click', addExtraAsset);
+  document.getElementById('assetQuantity').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') addExtraAsset();
+  });
+  
+  // Rental Form
+  document.getElementById('addRentalItem').addEventListener('click', addRentalItem);
+  document.getElementById('cancelEditBtn').addEventListener('click', cancelEdit);
+  document.getElementById('rentalBatchNo').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') addRentalItem();
+  });
+  
+  // CLOUD SYNC & BACKUP BUTTONS
+  document.getElementById('syncBtn').addEventListener('click', async () => {
+    if (!window.assetAPI || !window.assetAPI.syncFromCloud) {
+      showToast('❌ Cloud sync not available');
+      return;
+    }
+
+    const cloudData = await window.assetAPI.syncFromCloud();
+    
+    if (cloudData) {
+      if (cloudData.assets) await window.assetAPI.saveData(cloudData.assets);
+      if (cloudData.extraAssets) await window.assetAPI.saveExtraAssets(cloudData.extraAssets);
+      if (cloudData.rentalItems) await window.assetAPI.saveRentalItems(cloudData.rentalItems);
+      if (cloudData.ipMapping) await window.assetAPI.saveIPMapping(cloudData.ipMapping);
+
+      if (cloudData.paths) {
+        pmData = cloudData.paths;
+        savePMData();
+        if (document.getElementById('pathManagerModal').classList.contains('active')) {
+          refreshPMTable();
+        }
+      }
+
+      showToast('✅ Data loaded from cloud!');
+      
+      await loadSavedData();
+      renderStats();
+      renderSeatList('');
+      renderExtraAssets();
+      renderRentalItems();
+    } else {
+      showToast('❌ No cloud data found or connection failed');
+    }
+  });
+
+  document.getElementById('backupBtn').addEventListener('click', async () => {
+    if (!window.assetAPI) return;
+    const backupStr = await window.assetAPI.exportAllData();
+    const blob = new Blob([backupStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `asset_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('✅ Backup downloaded!');
+  });
+
+  document.getElementById('restoreBtn').addEventListener('click', () => {
+    if (!window.assetAPI) return;
+    
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.json';
+    fileInput.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        if (!confirm('⚠️ Are you sure? This will overwrite ALL current data with the backup file.')) return;
+        
+        const success = await window.assetAPI.importAllData(ev.target.result);
+        if (success) {
+          showToast('✅ Data restored!');
+          await loadSavedData();
+          renderStats();
+          renderSeatList('');
+          renderExtraAssets();
+          renderRentalItems();
+        } else {
+          showToast('❌ Invalid backup file');
+        }
+      };
+      reader.readAsText(file);
+    };
+    fileInput.click();
+  });
+
+  document.getElementById('cancelMoveBtn').addEventListener('click', closeMoveModal);
+  document.getElementById('confirmMoveBtn').addEventListener('click', confirmMove);
+  document.getElementById('moveModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('moveModal')) {
+      closeMoveModal();
+    }
+  });
+  
+  // Path Manager buttons
+  document.getElementById('pathManagerBtn').addEventListener('click', openPathManager);
+  document.getElementById('pathManagerModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('pathManagerModal')) closePathManager();
+  });
+  document.getElementById('pmFormModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('pmFormModal')) closePMForm();
+  });
+  
+  console.log('All event listeners attached!');
+});
+
+// ============================================================
+// INIT
+// ============================================================
+async function init() {
+  console.log('Initializing app...');
+  await loadSavedData();
+  renderStats();
+  renderSeatList('');
+  renderExtraAssets();
+  renderRentalItems();
+  populateSwapSeats();
+  console.log('App initialized - Data loaded:', data.length, 'seats');
+  console.log('Rental items:', rentalItems.length);
+}
+
+init();
+</script>
+
+<div class="made-by">
+  Made by <span>Yabesh</span>
+</div>
+
+</body>
+</html>

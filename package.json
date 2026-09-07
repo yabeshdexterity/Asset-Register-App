@@ -1,0 +1,49 @@
+{
+  "name": "asset-register",
+  "productName": "Asset Register",
+  "version": "1.0.0",
+  "description": "P12513 IT Infrastructure - Asset Register",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.p12513.assetregister",
+    "productName": "Asset Register",
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "config.json",
+      "serviceAccountKey.json",
+      "attendance_processor.py"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "YOUR_GITHUB_USERNAME",
+        "repo": "YOUR_REPO_NAME"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9",
+    "exceljs": "^4.4.0",
+    "firebase-admin": "^12.0.0",
+    "xlsx": "^0.18.5"
+  }
+}
