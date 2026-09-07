@@ -24,7 +24,8 @@
       "attendance_processor.py"
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "LOGO.ico"
     },
     "nsis": {
       "oneClick": false,
@@ -35,8 +36,8 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "YOUR_GITHUB_USERNAME",
-        "repo": "YOUR_REPO_NAME"
+        "owner": "yabeshdexterity",
+        "repo": "Asset-Register-App"
       }
     ]
   },
