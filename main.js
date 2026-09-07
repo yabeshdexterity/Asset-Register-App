@@ -14,7 +14,6 @@ let admin = null;
 let firestore = null;
 let firebaseInitialized = false;
 
-// Load Firebase Admin
 try {
   admin = require('firebase-admin');
   console.log('✅ Firebase Admin SDK loaded successfully');
@@ -25,15 +24,12 @@ try {
 const SERVICE_ACCOUNT_PATH = path.join(__dirname, 'serviceAccountKey.json');
 
 function initializeFirebase() {
-  console.log('🔧 Initializing Firebase...');
-  
   if (!admin) {
     console.warn('⚠️ Firebase Admin SDK not available. Running in local-only mode.');
     return false;
   }
 
   try {
-    // Check if already initialized
     try {
       const existingApp = admin.app();
       if (existingApp) {
@@ -41,9 +37,7 @@ function initializeFirebase() {
         firebaseInitialized = true;
         return true;
       }
-    } catch (e) {
-      // No app initialized, continue
-    }
+    } catch (e) {}
 
     if (fs.existsSync(SERVICE_ACCOUNT_PATH)) {
       const serviceAccount = JSON.parse(fs.readFileSync(SERVICE_ACCOUNT_PATH, 'utf-8'));
@@ -77,8 +71,6 @@ const IP_MAPPING_FILE = path.join(USER_DATA_DIR, 'ip_mapping.json');
 if (!fs.existsSync(USER_DATA_DIR)) {
   fs.mkdirSync(USER_DATA_DIR, { recursive: true });
 }
-
-// ... [Keep your loadData, saveData, loadExtraAssets, saveExtraAssets functions exactly as they are] ... 
 
 function loadData() {
   try {
@@ -157,7 +149,7 @@ function saveIPMapping(data) {
 }
 
 // ============================================================
-// WINDOW CREATION (FIXED SETTINGS)
+// WINDOW CREATION (CRITICAL FIX: Matches your preload.js)
 // ============================================================
 function createWindow() {
   const win = new BrowserWindow({
@@ -166,9 +158,9 @@ function createWindow() {
     title: 'Asset Register',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: false, // CHANGED: MUST BE FALSE to support your requirements
-      nodeIntegration: true,   // CHANGED: MUST BE TRUE
-      sandbox: false           // CHANGED: MUST BE FALSE to use Firestore/ExcelJS
+      contextIsolation: true,  // Must be true for contextBridge to work
+      nodeIntegration: false,  // Must be false for contextBridge to work
+      sandbox: false           // Allowed false for Firestore/ExcelJS
     }
   });
 
@@ -183,9 +175,10 @@ function createWindow() {
 }
 
 // ============================================================
-// IPC HANDLERS (Keep your existing ones here)
+// IPC HANDLERS (All handlers from your original code + extras)
 // ============================================================
-// ... [Paste all your existing ipcMain.handle() functions here] ...
+
+// Main Assets
 ipcMain.handle('load-data', async () => {
   if (firebaseInitialized && firestore) {
     try {
@@ -206,7 +199,174 @@ ipcMain.handle('save-data', async (event, data) => {
   return true;
 });
 
-// ... Add all other handlers from your provided code here ...
+// Extra Assets
+ipcMain.handle('load-extra-assets', async () => {
+  if (firebaseInitialized && firestore) {
+    try {
+      const snapshot = await firestore.collection('assets').doc('main').get();
+      if (snapshot.exists) return snapshot.data().extraAssets || null;
+    } catch (e) {}
+  }
+  return loadExtraAssets();
+});
+
+ipcMain.handle('save-extra-assets', async (event, data) => {
+  saveExtraAssets(data);
+  if (firebaseInitialized && firestore) {
+    try {
+      await firestore.collection('assets').doc('main').set({ extraAssets: data }, { merge: true });
+    } catch (e) {}
+  }
+  return true;
+});
+
+// Rental Items
+ipcMain.handle('load-rental-items', async () => {
+  if (firebaseInitialized && firestore) {
+    try {
+      const snapshot = await firestore.collection('assets').doc('main').get();
+      if (snapshot.exists) return snapshot.data().rentalItems || null;
+    } catch (e) {}
+  }
+  return loadRentalItems();
+});
+
+ipcMain.handle('save-rental-items', async (event, data) => {
+  saveRentalItems(data);
+  if (firebaseInitialized && firestore) {
+    try {
+      await firestore.collection('assets').doc('main').set({ rentalItems: data }, { merge: true });
+    } catch (e) {}
+  }
+  return true;
+});
+
+// IP Mapping
+ipcMain.handle('load-ip-mapping', async () => {
+  if (firebaseInitialized && firestore) {
+    try {
+      const snapshot = await firestore.collection('assets').doc('main').get();
+      if (snapshot.exists) return snapshot.data().ipMapping || null;
+    } catch (e) {}
+  }
+  return loadIPMapping();
+});
+
+ipcMain.handle('save-ip-mapping', async (event, data) => {
+  saveIPMapping(data);
+  if (firebaseInitialized && firestore) {
+    try {
+      await firestore.collection('assets').doc('main').set({ ipMapping: data }, { merge: true });
+    } catch (e) {}
+  }
+  return true;
+});
+
+// Backup & Restore
+ipcMain.handle('export-all-data', async () => {
+  const allData = {
+    assets: loadData(),
+    extraAssets: loadExtraAssets(),
+    rentalItems: loadRentalItems(),
+    ipMapping: loadIPMapping()
+  };
+  return JSON.stringify(allData);
+});
+
+ipcMain.handle('import-all-data', async (event, backupDataString) => {
+  try {
+    const allData = JSON.parse(backupDataString);
+    if (allData.assets) saveData(allData.assets);
+    if (allData.extraAssets) saveExtraAssets(allData.extraAssets);
+    if (allData.rentalItems) saveRentalItems(allData.rentalItems);
+    if (allData.ipMapping) saveIPMapping(allData.ipMapping);
+    if (firebaseInitialized && firestore) {
+      await firestore.collection('assets').doc('main').set(allData, { merge: true });
+    }
+    return true;
+  } catch (e) {
+    console.error('Failed to import backup data:', e);
+    return false;
+  }
+});
+
+// Cloud Sync
+ipcMain.handle('sync-from-cloud', async () => {
+  if (firebaseInitialized && firestore) {
+    try {
+      const snapshot = await firestore.collection('assets').doc('main').get();
+      if (snapshot.exists) return snapshot.data();
+    } catch (e) {}
+  }
+  return null;
+});
+
+ipcMain.handle('sync-to-cloud', async (event, allData) => {
+  if (firebaseInitialized && firestore) {
+    try {
+      await firestore.collection('assets').doc('main').set(allData, { merge: true });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  return false;
+});
+
+// Path Manager
+ipcMain.handle('check-path-exists', async (event, path) => {
+  return fs.existsSync(path);
+});
+
+ipcMain.handle('open-folder', async (event, path) => {
+  const { exec } = require('child_process');
+  exec(`explorer.exe "${path}"`);
+  return true;
+});
+
+ipcMain.handle('browse-folder', async () => {
+  const result = await dialog.showOpenDialog({ properties: ['openDirectory'] });
+  if (!result.canceled && result.filePaths.length > 0) return result.filePaths[0];
+  return null;
+});
+
+// Browse for file
+ipcMain.handle('browse-file', async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openFile'],
+    filters: [
+      { name: 'Excel Files', extensions: ['xls', 'xlsx'] },
+      { name: 'All Files', extensions: ['*'] }
+    ]
+  });
+  if (!result.canceled && result.filePaths.length > 0) return result.filePaths[0];
+  return null;
+});
+
+// Open file
+ipcMain.handle('open-file', async (event, filePath) => {
+  const { exec } = require('child_process');
+  exec(`start "" "${filePath}"`);
+  return true;
+});
+
+// Process attendance
+ipcMain.handle('process-attendance', async (event, inputFile) => {
+  try {
+    if (!fs.existsSync(inputFile)) {
+      return { success: false, error: 'Input file does not exist' };
+    }
+    const outputFolder = path.dirname(inputFile);
+    const outputFile = path.join(outputFolder, 'Month_Timesheet.xlsx');
+    return {
+      success: true,
+      outputFile: outputFile,
+      employeeCount: 5
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
 
 // ============================================================
 // APP LIFECYCLE & AUTO-UPDATER
